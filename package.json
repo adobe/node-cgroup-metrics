@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://git.corp.adobe.com/delbick/cgroup-metrics"
+    "url": "https://github.com/adobe/node-cgroup-metrics"
   },
   "keywords": [
     "node",
