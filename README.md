@@ -19,7 +19,7 @@ Calculated values:
 ### Installation
 
 ```
-npm install cgroup-metrics --save
+npm install cgroup-metrics
 ```
 
 ### Usage
