@@ -1,6 +1,6 @@
 {
   "name": "cgroup-metrics",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Node Module to read cgroup memory data",
   "main": "index.js",
   "scripts": {
