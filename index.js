@@ -21,13 +21,19 @@ function memory() {
         containerUsage: async function() {
             const rss = await readMetric('stat');
             const kmemUsage = await readMetric('kmem.usage_in_bytes');
-            return rss + kmemUsage
+            if (rss !== null && kmemUsage !== null) {
+                return rss + kmemUsage
+            }
+            return null
         },
         containerUsagePercentage: async function() {
             const rss = await readMetric('stat');
             const kmemUsage = await readMetric('kmem.usage_in_bytes');
             const limit = await readMetric('limit_in_bytes');
-            return (rss + kmemUsage) / limit
+            if (rss !== null && kmemUsage !== null && limit !== null) {
+                return (rss + kmemUsage) / limit
+            }
+            return null
         } 
     }
 }
@@ -42,7 +48,7 @@ function readMetric(metric) {
         fs.readFile(`/sys/fs/cgroup/memory/memory.${metric}`, function (err, data) {
             if (err) {
                 console.log(`Error reading '/sys/fs/cgroup/memory/memory.${metric}'`);
-                reject(err);
+                return reject(err);
             }
             else if (metric === 'stat') {
                 // get rss

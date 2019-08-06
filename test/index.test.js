@@ -30,9 +30,14 @@ const fsMock = {
 
 
 describe('cgroup Metrics', function() {
+    afterEach(() => {
+        mockery.deregisterMock(fsMock);
+        mockery.disable();
+    })
     it('should return the same value as reading the file system', function() {
         mockery.enable({
-            warnOnUnregistered: false
+            warnOnUnregistered: false,
+            useCleanCache:true
         });
         mockery.registerMock('fs', fsMock);
         const cgroup = require('../index');
@@ -52,8 +57,19 @@ describe('cgroup Metrics', function() {
         memory.containerUsage().then((res) => {
             expect(res).to.be(6666);
         })
-
-        mockery.deregisterMock(fsMock);
-        mockery.disable();
     });
+
+    it('should return null if there is no container running', function() {
+        const cgroup = require('../index');
+        const memory = cgroup.memory();
+        
+        // using promises
+        memory.containerUsage().then((res) => {
+            expect(res).to.be(null);
+        });
+        memory.containerUsagePercentage().then((res) => {
+            expect(res).to.be(null);
+        });
+    });
+
 });
