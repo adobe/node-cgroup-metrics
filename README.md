@@ -46,7 +46,9 @@ async function getContainerUsage() {
 }
 getContainerUsage();
 ```
+### Error Handling
 
+If there is no container running or there is an issue reading the file path, the function call will return `null`
 
 ### Contributing
 

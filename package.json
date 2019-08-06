@@ -1,6 +1,6 @@
 {
   "name": "cgroup-metrics",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Node Module to read cgroup memory data",
   "main": "index.js",
   "scripts": {
@@ -18,7 +18,7 @@
   ],
   "author": "Jamie Delbick",
   "dependencies": {
-    "fs": "0.0.1-security"
+    "fs": "^0.0.1-security"
   },
   "devDependencies": {
     "eslint": "^5.15.1",

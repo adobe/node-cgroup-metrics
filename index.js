@@ -47,7 +47,7 @@ function readMetric(metric) {
     return new Promise((resolve, reject) => {
         fs.readFile(`/sys/fs/cgroup/memory/memory.${metric}`, function (err, data) {
             if (err) {
-                console.log(`Error reading '/sys/fs/cgroup/memory/memory.${metric}'`);
+                // Error reading '/sys/fs/cgroup/memory/memory.${metric}'
                 return reject(err);
             }
             else if (metric === 'stat') {
