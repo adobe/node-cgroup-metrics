@@ -22,16 +22,19 @@ function memory() {
             const rss = await readMetric('stat');
             const kmemUsage = await readMetric('kmem.usage_in_bytes');
             if (rss !== null && kmemUsage !== null) {
-                return rss + kmemUsage
+                return (rss + kmemUsage);
             }
             return null
         },
-        containerUsagePercentage: async function() {
-            const rss = await readMetric('stat');
-            const kmemUsage = await readMetric('kmem.usage_in_bytes');
+        containerUsagePercentage: async function(containerUsage=false) {
+            if (!(containerUsage)) {
+                const rss = await readMetric('stat');
+                const kmemUsage = await readMetric('kmem.usage_in_bytes');
+                containerUsage = (rss !== null && kmemUsage !== null)? (rss + kmemUsage): null;
+            }
             const limit = await readMetric('limit_in_bytes');
-            if (rss !== null && kmemUsage !== null && limit !== null) {
-                return (rss + kmemUsage) / limit
+            if (containerUsage !== null && limit !== null) {
+                return ((containerUsage) / limit);
             }
             return null
         } 
@@ -63,4 +66,4 @@ function readMetric(metric) {
    
 }
 
-module.exports = {memory}
+module.exports = { memory }

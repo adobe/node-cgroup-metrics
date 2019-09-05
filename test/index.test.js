@@ -59,6 +59,31 @@ describe('cgroup Metrics', function() {
         })
     });
 
+    it('should return the same value as reading the file system with containerUsage', function() {
+        mockery.enable({
+            warnOnUnregistered: false,
+            useCleanCache:true
+        });
+        mockery.registerMock('fs', fsMock);
+        const cgroup = require('../index');
+        const memory = cgroup.memory();
+        
+        // using async funtion
+        async function getContainerUsage() {
+            const containerUsage = await memory.containerUsage();
+            expect(containerUsage).to.be(6666);
+            
+            const containerUsagePercentage = await memory.containerUsagePercentage(containerUsage); 
+            expect(containerUsagePercentage).to.be(6666/9999);
+        }
+        getContainerUsage();
+        
+        // using promises
+        memory.containerUsage().then((res) => {
+            expect(res).to.be(6666);
+        })
+    });
+
     it('should return null if there is no container running', function() {
         const cgroup = require('../index');
         const memory = cgroup.memory();
