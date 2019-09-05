@@ -41,7 +41,7 @@ async function getContainerUsage() {
     const containerUsage = await memory.containerUsage();
     console.log(containerUsage);
 
-    const containerUsagePercentage = await memory.containerUsagePercentage();
+    const containerUsagePercentage = await memory.containerUsagePercentage(containerUsage);
     console.log(containerUsagePercentage);
 }
 getContainerUsage();
