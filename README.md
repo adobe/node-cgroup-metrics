@@ -15,6 +15,16 @@ Calculated values:
 - `containerUsage()`: `stats.rss` + `kmem.usage_in_bytes`
 - `containerUsagePercentage()`:`stats.rss` + `kmem.usage_in_bytes` / `limit_in_bytes`
 
+### CPU Metrics:
+[CPU](https://www.kernel.org/doc/Documentation/cgroup-v1/cpuacct.txt) reads from path `/sys/fs/cgroup/`:
+
+- `cpuacct.usage`: total CPU time (in nanoseconds) obtained by this cgroup (CPU time obtained by all the tasks)
+in the system
+- `cpuacct.stat`: reports the user and system CPU time consumed by all tasks in this cgroup (including tasks lower in the hierarchy):
+    - `user`: CPU time (in nanoseconds) spent by tasks of the cgroup in user mode
+    - `system`: CPU time (in nanoseconds) spent by tasks of the cgroup in kernel mode
+- `cpuacct.usage_percpu`: CPU time (in nanoseconds) consumed on each CPU by all tasks in this cgroup (including tasks lower in the hierarchy).
+
 
 ### Installation
 
@@ -26,29 +36,43 @@ npm install cgroup-metrics
 
 ```javascript
 const cgroup = require('cgroup-metrics');
+
+// You can access each metric separately using the async functions for each metric
+
+// Memory Metrics
 const memory = cgroup.memory();
+const containerUsage = await memory.containerUsage();
+console.log(containerUsage);
 
-// cgroup.memory() returns a promise
-memory.containerUsage().then((res) => {
-    console.log(res);
-});
-memory.containerUsagePercentage().then((res) => {
-    console.log(res)
-})
+const containerUsagePercentage = await memory.containerUsagePercentage(containerUsage);
+console.log(containerUsagePercentage);
 
-// Or in an async function:
-async function getContainerUsage() {
-    const containerUsage = await memory.containerUsage();
-    console.log(containerUsage);
+// CPU Metrics
+const cpu = cgroup.cpu();
+const cpuacct_usage = await cpu.usage();
+console.log(`Total CPU usage: ${cpuacct_usage}`);
 
-    const containerUsagePercentage = await memory.containerUsagePercentage(containerUsage);
-    console.log(containerUsagePercentage);
-}
-getContainerUsage();
+const cpuacct_stats = await cpu.stat();
+console.log(`CPU user count: ${cpuacct_stat.user}`);
+console.log(`CPU system count: ${cpuacct_stat.system}`);
+
+const cpuacct_usage_percpu = await cpu.usage_percpu();
+console.log(`CPU usage per CPU task: ${cpuacct_usage_percpu}`);
+
+// Or you can use the function `getAllMetrics` to get an object of all the metrics
+const metrics = await cgroup.getAllMetrics();
+
+console.log(`Container usage: ${metrics.memory.containerUsage}`);
+console.log(`Container usage percentage: ${metrics.memory.containerUsagePercentage}`);
+
+console.log(`Total CPU usage: ${metrics.cpuacct.usage}`);
+console.log(`CPU user count: ${metrics.cpuacct.stat.user}`);
+console.log(`CPU system count: ${metrics.cpuacct.stat.system}`);
+console.log(`CPU usage per CPU task: ${metrics.cpuacct.usage_percpu}`);
 ```
 ### Error Handling
 
-If there is no container running or there is an issue reading the file path, the function call will return `null`
+If there is no container running or there is an issue reading the file path, the function call will error
 
 ### Contributing
 
