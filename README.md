@@ -1,3 +1,5 @@
+[![npm version](https://badge.fury.io/js/cgroup-metrics.svg)](https://badge.fury.io/js/cgroup-metrics)
+
 ### CGROUP-METRICS
 
 Node Module for reading [cgroup](https://www.kernel.org/doc/Documentation/cgroup-v1/) metrics. Reads from `/sys/fs/cgroup/`. 
