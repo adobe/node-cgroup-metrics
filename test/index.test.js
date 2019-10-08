@@ -132,6 +132,25 @@ describe('cgroup Metrics', function() {
         assert.equal(metrics.cpuacct.usage, 1000);
     });
 
+    it('should get all metrics and return a 1D object', async () => {
+        mockery.enable({
+            warnOnUnregistered: false,
+            useCleanCache:true
+        });
+        mockery.registerMock('fs', fsMock);
+        const { getAllMetrics } = require('../index');
+
+
+        const metrics = await getAllMetrics(true);
+
+        assert.equal(metrics['memory.containerUsage'], 6666);
+        assert.equal(metrics['memory.containerUsagePercentage'], 6666/9999);
+        assert.equal(metrics['cpuacct.stat.user'], 2000);
+        assert.equal(metrics['cpuacct.stat.system'], 3000);
+        assert.equal(metrics['cpuacct.usage_percpu'][1], 964460277);
+        assert.equal(metrics['cpuacct.usage'], 1000);
+    });
+
     it('should return an error if there is no container running', async () => {
         const cgroup = require('../index');
         const memory = cgroup.memory();

@@ -69,9 +69,10 @@ function cpu() {
 
 /**
  * Calls cpu() and memory() functions to get all metrics at once
+ * @param {Boolean} flatten if true, it returns a on dimensional object
  * @returns {Object} map of each metric to its result
  */
-async function getAllMetrics() {
+async function getAllMetrics(flatten=false) {
 
     const memory_container_usage = await memory().containerUsage();
     const memory_container_usage_perc = await memory().containerUsagePercentage(memory_container_usage);
@@ -79,6 +80,17 @@ async function getAllMetrics() {
     const cpuacct_usage = await cpu().usage();
     const cpuacct_stat = await cpu().stat();
     const cpuacct_usage_percpu = await cpu().usage_percpu();
+
+    if (flatten) {
+        return {
+            "memory.containerUsage": memory_container_usage,
+            "memory.containerUsagePercentage": memory_container_usage_perc,
+            "cpuacct.usage": cpuacct_usage,
+            "cpuacct.stat.user": cpuacct_stat.user,
+            "cpuacct.stat.system": cpuacct_stat.system,
+            "cpuacct.usage_percpu": cpuacct_usage_percpu
+        }
+    }
 
     return {
         memory: {
