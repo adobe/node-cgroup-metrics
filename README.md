@@ -36,20 +36,22 @@ npm install cgroup-metrics
 
 ### Usage
 
+You can access each metric separately using the async functions for each metric
+
+#### Memory Metrics
 ```javascript
 const cgroup = require('cgroup-metrics');
 
-// You can access each metric separately using the async functions for each metric
-
-// Memory Metrics
 const memory = cgroup.memory();
 const containerUsage = await memory.containerUsage();
 console.log(containerUsage);
 
 const containerUsagePercentage = await memory.containerUsagePercentage(containerUsage);
 console.log(containerUsagePercentage);
+```
 
-// CPU Metrics
+#### CPU Metrics
+```javascript
 const cpu = cgroup.cpu();
 const cpuacct_usage = await cpu.usage();
 console.log(`Total CPU usage: ${cpuacct_usage}`);
@@ -60,9 +62,13 @@ console.log(`CPU system count: ${cpuacct_stat.system}`);
 
 const cpuacct_usage_percpu = await cpu.usage_percpu();
 console.log(`CPU usage per CPU task: ${cpuacct_usage_percpu}`);
+```
+#### All Metrics
 
-// Or you can use the function `getAllMetrics` to get an object of all the metrics
-const metrics = await cgroup.getAllMetrics();
+Or you can use the function `metrics` to get an object of all the metrics:
+
+```javascript
+const metrics = await cgroup.metrics();
 
 console.log(`Container usage: ${metrics.memory.containerUsage}`);
 console.log(`Container usage percentage: ${metrics.memory.containerUsagePercentage}`);
@@ -72,9 +78,32 @@ console.log(`CPU user count: ${metrics.cpuacct.stat.user}`);
 console.log(`CPU system count: ${metrics.cpuacct.stat.system}`);
 console.log(`CPU usage per CPU task: ${metrics.cpuacct.usage_percpu}`);
 ```
+If you call `metrics` with parameter `flatten` set to `true`, it will return a flattened (1D) js object:
+```javascript
+const metrics = await cgroup.metrics(true);
+console.log(`Memory usage in the container: ${metrics["memory.containerUsage"]}`)
+```
+
 ### Error Handling
 
-If there is no container running or there is an issue reading the file path, the function call will error
+If there is no container running or there is an issue reading the file path, the function call will error something like this:
+```
+Error: Error reading file /sys/fs/cgroup/memory/memory.stat, Message: ENOENT: no such file or directory, open '/sys/fs/cgroup/memory/memory.stat'
+```
+
+If one of the files is empty, it will return an error like this:
+```
+Error: Error reading file /sys/fs/cgroup/memory/memory.stat, Message: File is empty
+```
+
+If a file is malformed, it will return an error like this:
+```
+Error: One or more metrics are malformed. containerUsage: 1234, limit: NaN
+```
+Or:
+```
+Error reading file /sys/fs/cgroup/cpuacct/cpuacct.stat, Message: Cannot read property 'split' of undefined
+```
 
 ### Contributing
 
