@@ -21,22 +21,25 @@ function memory() {
         containerUsage: async () => {
             const rss = await readMetric('memory/memory.stat');
             const kmemUsage = await readMetric('memory/memory.kmem.usage_in_bytes');
-            if (rss !== null && kmemUsage !== null) {
-                return (rss + kmemUsage);
+            if (typeof(rss) !== "number" || typeof(kmemUsage) !== "number" || (isNaN(rss)) || (isNaN(kmemUsage)) ) {
+                throw Error(`One or more metrics are malformed. rss: ${rss}, kmemUsage: ${kmemUsage}`);
             }
-            return null
+            return (rss + kmemUsage);
         },
         containerUsagePercentage: async (containerUsage=false) => {
             if (!(containerUsage)) {
                 const rss = await readMetric('memory/memory.stat');
                 const kmemUsage = await readMetric('memory/memory.kmem.usage_in_bytes');
-                containerUsage = (rss !== null && kmemUsage !== null)? (rss + kmemUsage): null;
+                if (typeof(rss) !== "number" || typeof(kmemUsage) !== "number" || (isNaN(rss)) || (isNaN(kmemUsage)) ) {
+                    throw Error(`One or more metrics are malformed. rss: ${rss}, kmemUsage: ${kmemUsage}`);
+                }
+                containerUsage = (rss + kmemUsage);
             }
             const limit = await readMetric('memory/memory.limit_in_bytes');
-            if (containerUsage !== null && limit !== null) {
-                return ((containerUsage) / limit);
+            if (typeof(containerUsage) !== "number" || typeof(limit) !== "number" || (isNaN(containerUsage)) || (isNaN(limit)) ) {
+                throw Error(`One or more metrics are malformed. containerUsage: ${containerUsage}, limit: ${limit}`);
             }
-            return null
+            return ((containerUsage) / limit);
         }
     }
 }
@@ -72,7 +75,7 @@ function cpu() {
  * @param {Boolean} flatten if true, it returns a on dimensional object
  * @returns {Object} map of each metric to its result
  */
-async function getAllMetrics(flatten=false) {
+async function metrics(flatten=false) {
 
     const memory_container_usage = await memory().containerUsage();
     const memory_container_usage_perc = await memory().containerUsagePercentage(memory_container_usage);
@@ -113,21 +116,25 @@ async function getAllMetrics(flatten=false) {
  */
 async function readMetric(metric) {
     try {
-        const data = fs.readFileSync(`/sys/fs/cgroup/${metric}`)
+        const data = fs.readFileSync(`/sys/fs/cgroup/${metric}`).toString();
+        // check file is not empty
+        if (data.length === 0) {
+            throw Error(`File is empty`);
+        }
         if (metric === 'memory/memory.stat') {
-                // get rss
-                const rss = data.toString().split('\n')[1].split(' ')[1];
+                // parse rss
+                const rss = data.split('\n')[1].split(' ')[1];
                 return(parseFloat(rss));
         }
         if (metric === 'cpuacct/cpuacct.stat') {
-            const user = data.toString().split('\n')[0].split(' ')[1];
-            const system = data.toString().split('\n')[1].split(' ')[1];
+            const user = data.split('\n')[0].split(' ')[1];
+            const system = data.split('\n')[1].split(' ')[1];
             return {user: user, system: system};
         }
         if (metric === 'cpuacct/cpuacct.usage_percpu') {
-            return data.toString().trim().split(' ');
+            return data.trim().split(' ');
         }
-        return(parseFloat(data.toString()));
+        return(parseFloat(data.trim()));
     } catch (e) {
         throw Error(`Error reading file /sys/fs/cgroup/${metric}, Message: ${e.message || e}`)
     }
@@ -136,5 +143,5 @@ async function readMetric(metric) {
 module.exports = {
     memory,
     cpu,
-    getAllMetrics
+    metrics
  }

@@ -42,6 +42,44 @@ const fsMock = {
      }
 };
 
+// mock empty file
+const fsMockEmptyFile = {
+    readFileSync: function (path) {
+        if (path === '/sys/fs/cgroup/memory/memory.stat') {
+            return ('');
+        }
+        return('file path not found');
+    }
+}
+
+// mock malformed file
+const fsMockMalformedFile = {
+    readFileSync: function (path) {
+        if (path === '/sys/fs/cgroup/memory/memory.stat') {
+            return ('cache 2453\nrss 1234\n');
+        }
+        if (path === '/sys/fs/cgroup/memory/memory.kmem.usage_in_bytes') {
+            return ('malformed data');
+        }
+        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') {
+            return ('malformed data');
+        }
+        return('file path not found');
+    }
+}
+
+// mock malformed file
+const fsMockMalformedStatFile = {
+    readFileSync: function (path) {
+        if (path === '/sys/fs/cgroup/memory/memory.stat') {
+            return ('malformed data');
+        }
+        if (path === '/sys/fs/cgroup/cpuacct/cpuacct.stat') {
+            return ('malformed data');
+        }
+        return('file path not found');
+    }
+}
 
 describe('cgroup Metrics', function() {
 
@@ -112,24 +150,24 @@ describe('cgroup Metrics', function() {
             useCleanCache:true
         });
         mockery.registerMock('fs', fsMock);
-        const { getAllMetrics } = require('../index');
+        const { metrics } = require('../index');
 
 
-        const metrics = await getAllMetrics();
+        const metrics_object = await metrics();
 
-        console.log(`Container usage: ${metrics.memory.containerUsage}`);
-        console.log(`Container usage percentage: ${metrics.memory.containerUsagePercentage}`);
+        console.log(`Container usage: ${metrics_object.memory.containerUsage}`);
+        console.log(`Container usage percentage: ${metrics_object.memory.containerUsagePercentage}`);
 
-        console.log(`Total CPU usage: ${metrics.cpuacct.usage}`);
-        console.log(`CPU user count: ${metrics.cpuacct.stat.user}`);
-        console.log(`CPU system count: ${metrics.cpuacct.stat.system}`);
-        console.log(`CPU usage per CPU task: ${metrics.cpuacct.usage_percpu}`);
-        assert.equal(metrics.memory.containerUsage, 6666);
-        assert.equal(metrics.memory.containerUsagePercentage, 6666/9999);
-        assert.equal(metrics.cpuacct.stat.user, 2000);
-        assert.equal(metrics.cpuacct.stat.system, 3000);
-        assert.equal(metrics.cpuacct.usage_percpu[1], 964460277);
-        assert.equal(metrics.cpuacct.usage, 1000);
+        console.log(`Total CPU usage: ${metrics_object.cpuacct.usage}`);
+        console.log(`CPU user count: ${metrics_object.cpuacct.stat.user}`);
+        console.log(`CPU system count: ${metrics_object.cpuacct.stat.system}`);
+        console.log(`CPU usage per CPU task: ${metrics_object.cpuacct.usage_percpu}`);
+        assert.equal(metrics_object.memory.containerUsage, 6666);
+        assert.equal(metrics_object.memory.containerUsagePercentage, 6666/9999);
+        assert.equal(metrics_object.cpuacct.stat.user, 2000);
+        assert.equal(metrics_object.cpuacct.stat.system, 3000);
+        assert.equal(metrics_object.cpuacct.usage_percpu[1], 964460277);
+        assert.equal(metrics_object.cpuacct.usage, 1000);
     });
 
     it('should get all metrics and return a 1D object', async () => {
@@ -138,19 +176,20 @@ describe('cgroup Metrics', function() {
             useCleanCache:true
         });
         mockery.registerMock('fs', fsMock);
-        const { getAllMetrics } = require('../index');
+        const { metrics } = require('../index');
 
 
-        const metrics = await getAllMetrics(true);
+        const metrics_object = await metrics(true);
 
-        assert.equal(metrics['memory.containerUsage'], 6666);
-        assert.equal(metrics['memory.containerUsagePercentage'], 6666/9999);
-        assert.equal(metrics['cpuacct.stat.user'], 2000);
-        assert.equal(metrics['cpuacct.stat.system'], 3000);
-        assert.equal(metrics['cpuacct.usage_percpu'][1], 964460277);
-        assert.equal(metrics['cpuacct.usage'], 1000);
+        assert.equal(metrics_object['memory.containerUsage'], 6666);
+        assert.equal(metrics_object['memory.containerUsagePercentage'], 6666/9999);
+        assert.equal(metrics_object['cpuacct.stat.user'], 2000);
+        assert.equal(metrics_object['cpuacct.stat.system'], 3000);
+        assert.equal(metrics_object['cpuacct.usage_percpu'][1], 964460277);
+        assert.equal(metrics_object['cpuacct.usage'], 1000);
     });
 
+    // error handling check
     it('should return an error if there is no container running', async () => {
         const cgroup = require('../index');
         const memory = cgroup.memory();
@@ -174,6 +213,91 @@ describe('cgroup Metrics', function() {
         } catch (e) {
             console.log(`test expected to fail: ${e}`)
             assert.equal(e.message, "Error reading file /sys/fs/cgroup/cpuacct/cpuacct.usage, Message: ENOENT: no such file or directory, open '/sys/fs/cgroup/cpuacct/cpuacct.usage'")
+        }
+    });
+
+    it('should throw an error if the file is empty', async () => {
+        mockery.enable({
+            warnOnUnregistered: false,
+            useCleanCache:true
+        });
+        mockery.registerMock('fs', fsMockEmptyFile);
+
+        const cgroup = require('../index');
+        const memory = cgroup.memory();
+
+        try {
+            await memory.containerUsage();
+            assert.fail('failure expected');
+        } catch (e) {
+            console.log(`test expected to fail: ${e}`)
+            assert.equal(e.message, "Error reading file /sys/fs/cgroup/memory/memory.stat, Message: File is empty")
+        }
+    });
+
+    after( () => {
+        mockery.deregisterAll();
+    })
+
+    it('should throw an error if the data is malformed', async () => {
+        mockery.enable({
+            warnOnUnregistered: false,
+            useCleanCache:true
+        });
+        mockery.registerMock('fs', fsMockMalformedFile);
+
+        const cgroup = require('../index');
+        const memory = cgroup.memory();
+
+        try {
+            await memory.containerUsage();
+            assert.fail('failure expected');
+        } catch (e) {
+            console.log(`test expected to fail: ${e}`)
+            assert.equal(e.message, "One or more metrics are malformed. rss: 1234, kmemUsage: NaN")
+        }
+        try {
+            await memory.containerUsagePercentage();
+            assert.fail('failure expected');
+        } catch (e) {
+            console.log(`test expected to fail: ${e}`)
+            assert.equal(e.message, "One or more metrics are malformed. rss: 1234, kmemUsage: NaN")
+        }
+
+        try {
+            await memory.containerUsagePercentage(1234);
+            assert.fail('failure expected');
+        } catch (e) {
+            console.log(`test expected to fail: ${e}`)
+            assert.equal(e.message, "One or more metrics are malformed. containerUsage: 1234, limit: NaN")
+        }
+    });
+
+    it('should throw an error if the stat data is malformed', async () => {
+        mockery.enable({
+            warnOnUnregistered: false,
+            useCleanCache:true
+        });
+        mockery.registerMock('fs', fsMockMalformedStatFile);
+
+        const cgroup = require('../index');
+        const memory = cgroup.memory();
+        const cpu = cgroup.cpu();
+
+
+        try {
+            await memory.containerUsage();
+            assert.fail('failure expected');
+        } catch (e) {
+            console.log(`test expected to fail: ${e}`)
+            assert.equal(e.message, "Error reading file /sys/fs/cgroup/memory/memory.stat, Message: Cannot read property 'split' of undefined")
+        }
+        try {
+            await cpu.stat();
+            assert.fail('failure expected');
+        } catch (e) {
+            console.log(`test expected to fail: ${e}`)
+            assert.equal(e.message, "Error reading file /sys/fs/cgroup/cpuacct/cpuacct.stat, Message: Cannot read property 'split' of undefined")
         }
     });
 
