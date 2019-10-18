@@ -1,0 +1,4 @@
+# Directory Cache Files
+.DS_Store
+thumbs.db
+.vscode
