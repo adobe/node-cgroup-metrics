@@ -78,11 +78,19 @@ const fsMockMalformedStatFile = {
     }
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
 describe('cgroup Metrics', function() {
 
     afterEach(() => {
         mockery.deregisterMock('fs');
         mockery.disable();
+    })
+
+    after( () => {
+        mockery.deregisterAll();
     })
 
     it('should return the same value as reading the mocked value in the file system', async () => {
@@ -129,11 +137,33 @@ describe('cgroup Metrics', function() {
 
 
         const usage = await cpu.usage();
-        assert.equal(usage, 1000);
+        assert.equal(usage.timeSinceContainerNS, 1000);
+        assert.equal(typeof usage, "object");
+        assert.equal(typeof usage.timestamp, "number");
+        assert.equal(typeof usage.timeSinceContainerNS, "number");
 
         const stat = await cpu.stat();
         assert.equal(stat.user, 2000);
         assert.equal(stat.system, 3000);
+        assert.equal(typeof stat.timestamp, "number");
+
+    });
+
+    it('should calculate cpu usage over a period of time', async () => {
+        const cgroup = require('../index');
+        const cpu = cgroup.cpu();
+        const cpuUsage1 = {
+            timeSinceContainerNS: 4029,
+            timestamp: 100000
+        }
+        const cpuUsage2 = {
+            timeSinceContainerNS: 4329,
+            timestamp: 102000
+        }
+
+
+        const calculatedUsage = cpu.calculatedUsage(cpuUsage1, cpuUsage2);
+        assert.equal(calculatedUsage, 15);
 
     });
 
@@ -158,7 +188,7 @@ describe('cgroup Metrics', function() {
         assert.equal(metrics_object.memory.containerUsagePercentage, 6666/9999);
         assert.equal(metrics_object.cpuacct.stat.user, 2000);
         assert.equal(metrics_object.cpuacct.stat.system, 3000);
-        assert.equal(metrics_object.cpuacct.usage, 1000);
+        assert.equal(metrics_object.cpuacct.usage.timeSinceContainerNS, 1000);
     });
 
     it('should get all metrics and return a 1D object', async () => {
@@ -170,13 +200,13 @@ describe('cgroup Metrics', function() {
         const { metrics } = require('../index');
 
 
-        const metrics_object = await metrics(true);
+        const metrics_object1D = await metrics(true);
 
-        assert.equal(metrics_object['memory.containerUsage'], 6666);
-        assert.equal(metrics_object['memory.containerUsagePercentage'], 6666/9999);
-        assert.equal(metrics_object['cpuacct.stat.user'], 2000);
-        assert.equal(metrics_object['cpuacct.stat.system'], 3000);
-        assert.equal(metrics_object['cpuacct.usage'], 1000);
+        assert.equal(metrics_object1D['memory.containerUsage'], 6666);
+        assert.equal(metrics_object1D['memory.containerUsagePercentage'], 6666/9999);
+        assert.equal(metrics_object1D['cpuacct.stat.user'], 2000);
+        assert.equal(metrics_object1D['cpuacct.stat.system'], 3000);
+        assert.equal(metrics_object1D['cpuacct.usage.timeSinceContainerNS'], 1000);
     });
 
     // error handling check
@@ -224,10 +254,6 @@ describe('cgroup Metrics', function() {
             assert.equal(e.message, "Error reading file /sys/fs/cgroup/memory/memory.stat, Message: File is empty")
         }
     });
-
-    after( () => {
-        mockery.deregisterAll();
-    })
 
     it('should throw an error if the data is malformed', async () => {
         mockery.enable({
@@ -290,9 +316,5 @@ describe('cgroup Metrics', function() {
             assert.equal(e.message, "Error reading file /sys/fs/cgroup/cpuacct/cpuacct.stat, Message: Cannot read property 'split' of undefined")
         }
     });
-
-    after( () => {
-        mockery.deregisterAll();
-    })
 
 });

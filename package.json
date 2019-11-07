@@ -19,6 +19,7 @@
   "author": "Jamie Delbick",
   "dependencies": {
     "assert": "^2.0.0",
+    "flat": "^5.0.0",
     "fs": "^0.0.1-security"
   },
   "devDependencies": {
