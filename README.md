@@ -25,7 +25,6 @@ in the system
 - `cpuacct.stat`: reports the user and system CPU time consumed by all tasks in this cgroup (including tasks lower in the hierarchy):
     - `user`: CPU time (in nanoseconds) spent by tasks of the cgroup in user mode
     - `system`: CPU time (in nanoseconds) spent by tasks of the cgroup in kernel mode
-- `cpuacct.usage_percpu`: CPU time (in nanoseconds) consumed on each CPU by all tasks in this cgroup (including tasks lower in the hierarchy).
 
 
 ### Installation
@@ -59,9 +58,6 @@ console.log(`Total CPU usage: ${cpuacct_usage}`);
 const cpuacct_stats = await cpu.stat();
 console.log(`CPU user count: ${cpuacct_stat.user}`);
 console.log(`CPU system count: ${cpuacct_stat.system}`);
-
-const cpuacct_usage_percpu = await cpu.usage_percpu();
-console.log(`CPU usage per CPU task: ${cpuacct_usage_percpu}`);
 ```
 #### All Metrics
 
@@ -76,7 +72,6 @@ console.log(`Container usage percentage: ${metrics.memory.containerUsagePercenta
 console.log(`Total CPU usage: ${metrics.cpuacct.usage}`);
 console.log(`CPU user count: ${metrics.cpuacct.stat.user}`);
 console.log(`CPU system count: ${metrics.cpuacct.stat.system}`);
-console.log(`CPU usage per CPU task: ${metrics.cpuacct.usage_percpu}`);
 ```
 If you call `metrics` with parameter `flatten` set to `true`, it will return a flattened (1D) js object:
 ```javascript

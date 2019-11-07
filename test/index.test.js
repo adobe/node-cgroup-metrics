@@ -35,9 +35,6 @@ const fsMock = {
         if (path === '/sys/fs/cgroup/cpuacct/cpuacct.stat') {
             return ('user 2000\nsystem 3000\n');
         }
-        if (path === '/sys/fs/cgroup/cpuacct/cpuacct.usage_percpu') {
-            return ('225049880 964460277 1520937451 464329645\n');
-        }
         return('file path not found');
      }
 };
@@ -138,10 +135,6 @@ describe('cgroup Metrics', function() {
         assert.equal(stat.user, 2000);
         assert.equal(stat.system, 3000);
 
-        const usage_percpu = await cpu.usage_percpu();
-        assert.equal(usage_percpu[1], 964460277);
-        assert.equal(usage_percpu[3], 464329645);
-
     });
 
     it('should get all metrics', async () => {
@@ -161,12 +154,10 @@ describe('cgroup Metrics', function() {
         console.log(`Total CPU usage: ${metrics_object.cpuacct.usage}`);
         console.log(`CPU user count: ${metrics_object.cpuacct.stat.user}`);
         console.log(`CPU system count: ${metrics_object.cpuacct.stat.system}`);
-        console.log(`CPU usage per CPU task: ${metrics_object.cpuacct.usage_percpu}`);
         assert.equal(metrics_object.memory.containerUsage, 6666);
         assert.equal(metrics_object.memory.containerUsagePercentage, 6666/9999);
         assert.equal(metrics_object.cpuacct.stat.user, 2000);
         assert.equal(metrics_object.cpuacct.stat.system, 3000);
-        assert.equal(metrics_object.cpuacct.usage_percpu[1], 964460277);
         assert.equal(metrics_object.cpuacct.usage, 1000);
     });
 
@@ -185,7 +176,6 @@ describe('cgroup Metrics', function() {
         assert.equal(metrics_object['memory.containerUsagePercentage'], 6666/9999);
         assert.equal(metrics_object['cpuacct.stat.user'], 2000);
         assert.equal(metrics_object['cpuacct.stat.system'], 3000);
-        assert.equal(metrics_object['cpuacct.usage_percpu'][1], 964460277);
         assert.equal(metrics_object['cpuacct.usage'], 1000);
     });
 
