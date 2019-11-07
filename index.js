@@ -46,7 +46,7 @@ function memory() {
 
 /**
  * Reads metrics from `/sys/fs/cgroup/cpuacct`
- * @returns Three asyncronous functions `usage`, `stat`, and `usage_percpu`
+ * @returns Three asyncronous functions `usage` and `stat`
  */
 function cpu() {
     return {
@@ -60,11 +60,6 @@ function cpu() {
         stat: async () => {
             const stat = await readMetric('cpuacct/cpuacct.stat');
             return stat
-        },
-
-        // returns a list of cpu usages by task
-        usage_percpu: async () => {
-            return readMetric('cpuacct/cpuacct.usage_percpu');
         }
 
     }
@@ -82,7 +77,6 @@ async function metrics(flatten=false) {
 
     const cpuacct_usage = await cpu().usage();
     const cpuacct_stat = await cpu().stat();
-    const cpuacct_usage_percpu = await cpu().usage_percpu();
 
     if (flatten) {
         return {
@@ -90,8 +84,7 @@ async function metrics(flatten=false) {
             "memory.containerUsagePercentage": memory_container_usage_perc,
             "cpuacct.usage": cpuacct_usage,
             "cpuacct.stat.user": cpuacct_stat.user,
-            "cpuacct.stat.system": cpuacct_stat.system,
-            "cpuacct.usage_percpu": cpuacct_usage_percpu
+            "cpuacct.stat.system": cpuacct_stat.system
         }
     }
 
@@ -103,7 +96,6 @@ async function metrics(flatten=false) {
         cpuacct: {
             usage: cpuacct_usage,
             stat: cpuacct_stat,
-            usage_percpu: cpuacct_usage_percpu
         }
     }
 }
@@ -130,9 +122,6 @@ async function readMetric(metric) {
             const user = data.split('\n')[0].split(' ')[1];
             const system = data.split('\n')[1].split(' ')[1];
             return {user: user, system: system};
-        }
-        if (metric === 'cpuacct/cpuacct.usage_percpu') {
-            return data.trim().split(' ');
         }
         return(parseFloat(data.trim()));
     } catch (e) {

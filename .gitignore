@@ -2,3 +2,6 @@
 .DS_Store
 thumbs.db
 .vscode
+
+node_modules
+.nyc_output
