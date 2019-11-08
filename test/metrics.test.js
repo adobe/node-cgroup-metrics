@@ -139,17 +139,21 @@ describe('cgroup Metrics', function() {
 
 
         const usage = await cpu.usage();
-        assert.equal(usage.timeSinceContainerNS, 1000);
+        assert.equal(usage.cpuNanosSinceContainerStart, 1000);
         assert.equal(typeof usage, "object");
         assert.equal(typeof usage.timestamp, "number");
-        assert.equal(typeof usage.timeSinceContainerNS, "number");
+        assert.equal(typeof usage.cpuNanosSinceContainerStart, "number");
 
         const stat = await cpu.stat();
-        assert.equal(stat.user, 2000);
-        assert.equal(stat.system, 3000);
-        assert.equal(typeof stat.system, "number");
-        assert.equal(typeof stat.user, "number");
-        assert.equal(typeof stat.timestamp, "number");
+
+        assert.equal(typeof stat.system, "object");
+        assert.equal(typeof stat.user, "object");
+        assert.equal(stat.user.cpuNanosSinceContainerStart, 2000);
+        assert.equal(stat.system.cpuNanosSinceContainerStart, 3000);
+        assert.equal(typeof stat.system.cpuNanosSinceContainerStart, "number");
+        assert.equal(typeof stat.user.cpuNanosSinceContainerStart, "number");
+        assert.equal(typeof stat.user.timestamp, "number");
+        assert.equal(typeof stat.system.timestamp, "number");
 
     });
 
@@ -157,17 +161,17 @@ describe('cgroup Metrics', function() {
         const cgroup = require('../index');
         const cpu = cgroup.cpu();
         const cpuUsage1 = {
-            timeSinceContainerNS: 4029,
+            cpuNanosSinceContainerStart: 400000029,
             timestamp: 100000
         }
         const cpuUsage2 = {
-            timeSinceContainerNS: 4329,
+            cpuNanosSinceContainerStart: 430000029,
             timestamp: 102000
         }
 
 
         const calculatedUsage = cpu.calculatedUsage(cpuUsage1, cpuUsage2);
-        assert.equal(calculatedUsage, 15);
+        assert.equal(calculatedUsage, 1.5);
 
     });
 
@@ -190,9 +194,9 @@ describe('cgroup Metrics', function() {
         console.log(`CPU system count: ${metrics_object.cpuacct.stat.system}`);
         assert.equal(metrics_object.memory.containerUsage, 6666);
         assert.equal(metrics_object.memory.containerUsagePercentage, 6666/9999);
-        assert.equal(metrics_object.cpuacct.stat.user, 2000);
-        assert.equal(metrics_object.cpuacct.stat.system, 3000);
-        assert.equal(metrics_object.cpuacct.usage.timeSinceContainerNS, 1000);
+        assert.equal(metrics_object.cpuacct.stat.user.cpuNanosSinceContainerStart, 2000);
+        assert.equal(metrics_object.cpuacct.stat.system.cpuNanosSinceContainerStart, 3000);
+        assert.equal(metrics_object.cpuacct.usage.cpuNanosSinceContainerStart, 1000);
     });
 
     it('should get all metrics and return a 1D object', async () => {
@@ -208,9 +212,12 @@ describe('cgroup Metrics', function() {
 
         assert.equal(metrics_object1D['memory.containerUsage'], 6666);
         assert.equal(metrics_object1D['memory.containerUsagePercentage'], 6666/9999);
-        assert.equal(metrics_object1D['cpuacct.stat.user'], 2000);
-        assert.equal(metrics_object1D['cpuacct.stat.system'], 3000);
-        assert.equal(metrics_object1D['cpuacct.usage.timeSinceContainerNS'], 1000);
+        assert.equal(metrics_object1D['cpuacct.stat.user.cpuNanosSinceContainerStart'], 2000);
+        assert.equal(metrics_object1D['cpuacct.stat.system.cpuNanosSinceContainerStart'], 3000);
+        assert.equal(metrics_object1D['cpuacct.usage.cpuNanosSinceContainerStart'], 1000);
+        assert.equal(typeof metrics_object1D['cpuacct.stat.user.timestamp'], "number");
+        assert.equal(typeof metrics_object1D['cpuacct.stat.system.timestamp'], "number");
+        assert.equal(typeof metrics_object1D['cpuacct.usage.timestamp'], "number");
     });
 
     // error handling check
