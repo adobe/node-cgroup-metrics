@@ -120,9 +120,11 @@ describe('cgroup Metrics', function() {
 
         const containerUsage = await memory.containerUsage();
         assert.equal(containerUsage, 6666);
+        assert.equal(typeof containerUsage, "number");
 
         const containerUsagePercentage = await memory.containerUsagePercentage(containerUsage);
         assert.equal(containerUsagePercentage, 6666/9999);
+        assert.equal(typeof containerUsagePercentage, "number");
 
     });
 
@@ -145,6 +147,8 @@ describe('cgroup Metrics', function() {
         const stat = await cpu.stat();
         assert.equal(stat.user, 2000);
         assert.equal(stat.system, 3000);
+        assert.equal(typeof stat.system, "number");
+        assert.equal(typeof stat.user, "number");
         assert.equal(typeof stat.timestamp, "number");
 
     });
