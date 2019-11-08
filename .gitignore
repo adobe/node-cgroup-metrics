@@ -5,3 +5,4 @@ thumbs.db
 
 node_modules
 .nyc_output
+cgroup-metrics-1.1.2.tgz
