@@ -33,7 +33,7 @@ Both calls will return an object containing one or more `CpuMetric` objects for 
 - `timestamp`: timestamp of when the measurement was taken
 
 Calculated CPU values:
-- `calculatedUsage`: takes two instances of calls to `cpuacct.usage` or `cpuacct.stat` and returns the calculated usage:
+- `calculateUsage`: takes two instances of calls to `cpuacct.usage` or `cpuacct.stat` and returns the calculated usage:
     ` second time since container start - first time since container start / total time`
 
 
@@ -89,7 +89,7 @@ const cpuacct_stats = await cpu.stat();
 console.log(`CPU user count object: ${cpuacct_stat.user}`);
 console.log(`CPU system count object: ${cpuacct_stat.system}`);
 
-const calculatedUsage = await cpu.calculatedUsage(cpuacct_usage1, cpuacct_usage2);
+const calculateUsage = await cpu.calculateUsage(cpuacct_usage1, cpuacct_usage2);
 
 ```
 #### All Metrics

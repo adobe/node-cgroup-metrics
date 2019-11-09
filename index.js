@@ -10,7 +10,9 @@ written permission of Adobe.
 */
 
 'use strict';
-const { memory, cpu, metrics} = require('./lib/metrics');
+const { metrics } = require('./lib/metrics');
+const cpu = require('./lib/cpu');
+const memory = require('./lib/memory');
 
 module.exports = {
     memory,

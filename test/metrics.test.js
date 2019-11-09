@@ -78,9 +78,6 @@ const fsMockMalformedStatFile = {
     }
 }
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
 
 describe('cgroup Metrics', function() {
 
@@ -99,14 +96,13 @@ describe('cgroup Metrics', function() {
             useCleanCache:true
         });
         mockery.registerMock('fs', fsMock);
-        const cgroup = require('../index');
-        const memory = cgroup.memory();
+        const memory = require('../lib/memory');
 
-        const containerUsage = await memory.containerUsage();
+        const containerUsage =  memory.containerUsage();
         assert.equal(containerUsage, 6666);
 
-        const containerUsagePercentage = await memory.containerUsagePercentage();
-        assert.equal(containerUsagePercentage, 6666/9999);
+        const containerUsagePercentage =  memory.containerUsagePercentage();
+        assert.equal(containerUsagePercentage, 6666/9999 * 100);
     });
 
     it('should return the same value as reading the mocked memory value in the file system with containerUsage', async () => {
@@ -115,15 +111,14 @@ describe('cgroup Metrics', function() {
             useCleanCache:true
         });
         mockery.registerMock('fs', fsMock);
-        const cgroup = require('../index');
-        const memory = cgroup.memory();
+        const memory = require('../lib/memory');
 
-        const containerUsage = await memory.containerUsage();
+        const containerUsage =  memory.containerUsage();
         assert.equal(containerUsage, 6666);
         assert.equal(typeof containerUsage, "number");
 
-        const containerUsagePercentage = await memory.containerUsagePercentage(containerUsage);
-        assert.equal(containerUsagePercentage, 6666/9999);
+        const containerUsagePercentage =  memory.containerUsagePercentage(containerUsage);
+        assert.equal(containerUsagePercentage, 6666/9999 * 100);
         assert.equal(typeof containerUsagePercentage, "number");
 
     });
@@ -134,17 +129,16 @@ describe('cgroup Metrics', function() {
             useCleanCache:true
         });
         mockery.registerMock('fs', fsMock);
-        const cgroup = require('../index');
-        const cpu = cgroup.cpu();
+        const cpu = require('../lib/cpu');
 
 
-        const usage = await cpu.usage();
+        const usage = cpu.usage();
         assert.equal(usage.cpuNanosSinceContainerStart, 1000);
         assert.equal(typeof usage, "object");
         assert.equal(typeof usage.timestamp, "number");
         assert.equal(typeof usage.cpuNanosSinceContainerStart, "number");
 
-        const stat = await cpu.stat();
+        const stat = cpu.stat();
 
         assert.equal(typeof stat.system, "object");
         assert.equal(typeof stat.user, "object");
@@ -158,8 +152,7 @@ describe('cgroup Metrics', function() {
     });
 
     it('should calculate cpu usage over a period of time', async () => {
-        const cgroup = require('../index');
-        const cpu = cgroup.cpu();
+        const cpu = require('../lib/cpu');
         const cpuUsage1 = {
             cpuNanosSinceContainerStart: 400000029,
             timestamp: 100000
@@ -169,9 +162,8 @@ describe('cgroup Metrics', function() {
             timestamp: 102000
         }
 
-
-        const calculatedUsage = cpu.calculatedUsage(cpuUsage1, cpuUsage2);
-        assert.equal(calculatedUsage, 1.5);
+        const calculateUsage = cpu.calculateUsage(cpuUsage1, cpuUsage2);
+        assert.equal(calculateUsage, 1.5);
 
     });
 
@@ -184,7 +176,7 @@ describe('cgroup Metrics', function() {
         const { metrics } = require('../index');
 
 
-        const metrics_object = await metrics();
+        const metrics_object = metrics();
 
         console.log(`Container usage: ${metrics_object.memory.containerUsage}`);
         console.log(`Container usage percentage: ${metrics_object.memory.containerUsagePercentage}`);
@@ -193,7 +185,7 @@ describe('cgroup Metrics', function() {
         console.log(`CPU user count: ${metrics_object.cpuacct.stat.user}`);
         console.log(`CPU system count: ${metrics_object.cpuacct.stat.system}`);
         assert.equal(metrics_object.memory.containerUsage, 6666);
-        assert.equal(metrics_object.memory.containerUsagePercentage, 6666/9999);
+        assert.equal(metrics_object.memory.containerUsagePercentage, 6666/9999 * 100);
         assert.equal(metrics_object.cpuacct.stat.user.cpuNanosSinceContainerStart, 2000);
         assert.equal(metrics_object.cpuacct.stat.system.cpuNanosSinceContainerStart, 3000);
         assert.equal(metrics_object.cpuacct.usage.cpuNanosSinceContainerStart, 1000);
@@ -208,10 +200,10 @@ describe('cgroup Metrics', function() {
         const { metrics } = require('../index');
 
 
-        const metrics_object1D = await metrics(true);
+        const metrics_object1D = metrics(true);
 
         assert.equal(metrics_object1D['memory.containerUsage'], 6666);
-        assert.equal(metrics_object1D['memory.containerUsagePercentage'], 6666/9999);
+        assert.equal(metrics_object1D['memory.containerUsagePercentage'], 6666/9999 * 100);
         assert.equal(metrics_object1D['cpuacct.stat.user.cpuNanosSinceContainerStart'], 2000);
         assert.equal(metrics_object1D['cpuacct.stat.system.cpuNanosSinceContainerStart'], 3000);
         assert.equal(metrics_object1D['cpuacct.usage.cpuNanosSinceContainerStart'], 1000);
@@ -222,11 +214,10 @@ describe('cgroup Metrics', function() {
 
     // error handling check
     it('should return an error if there is no container running', async () => {
-        const cgroup = require('../index');
-        const memory = cgroup.memory();
+        const memory = require('../lib/memory');
 
         try {
-            await memory.containerUsage();
+            memory.containerUsage();
             assert.fail('failure expected');
         } catch (e) {
             console.log(`test expected to fail: ${e}`)
@@ -235,11 +226,10 @@ describe('cgroup Metrics', function() {
     });
 
     it('should fail for cpu usage if there is no container running', async () => {
-        const cgroup = require('../index');
-        const cpu = cgroup.cpu();
+        const cpu = require('../lib/cpu');
 
         try {
-            await cpu.usage();
+            cpu.usage();
             assert.fail('failure expected');
         } catch (e) {
             console.log(`test expected to fail: ${e}`)
@@ -254,11 +244,10 @@ describe('cgroup Metrics', function() {
         });
         mockery.registerMock('fs', fsMockEmptyFile);
 
-        const cgroup = require('../index');
-        const memory = cgroup.memory();
+        const memory = require('../lib/memory');
 
         try {
-            await memory.containerUsage();
+            memory.containerUsage();
             assert.fail('failure expected');
         } catch (e) {
             console.log(`test expected to fail: ${e}`)
@@ -273,18 +262,17 @@ describe('cgroup Metrics', function() {
         });
         mockery.registerMock('fs', fsMockMalformedFile);
 
-        const cgroup = require('../index');
-        const memory = cgroup.memory();
+        const memory = require('../lib/memory');
 
         try {
-            await memory.containerUsage();
+            memory.containerUsage();
             assert.fail('failure expected');
         } catch (e) {
             console.log(`test expected to fail: ${e}`)
             assert.equal(e.message, "One or more metrics are malformed. rss: 1234, kmemUsage: NaN")
         }
         try {
-            await memory.containerUsagePercentage();
+            memory.containerUsagePercentage();
             assert.fail('failure expected');
         } catch (e) {
             console.log(`test expected to fail: ${e}`)
@@ -292,7 +280,7 @@ describe('cgroup Metrics', function() {
         }
 
         try {
-            await memory.containerUsagePercentage(1234);
+            memory.containerUsagePercentage(1234);
             assert.fail('failure expected');
         } catch (e) {
             console.log(`test expected to fail: ${e}`)
@@ -307,25 +295,31 @@ describe('cgroup Metrics', function() {
         });
         mockery.registerMock('fs', fsMockMalformedStatFile);
 
-        const cgroup = require('../index');
-        const memory = cgroup.memory();
-        const cpu = cgroup.cpu();
+        const {memory, cpu} = require('../index');
 
+        let threw = false;
 
         try {
-            await memory.containerUsage();
+            memory.containerUsage();
             assert.fail('failure expected');
         } catch (e) {
+            threw = true;
             console.log(`test expected to fail: ${e}`)
             assert.equal(e.message, "Error reading file /sys/fs/cgroup/memory/memory.stat, Message: Cannot read property 'split' of undefined")
         }
+
+        assert.ok(threw);
+        threw = false;
+
         try {
-            await cpu.stat();
+             cpu.stat();
             assert.fail('failure expected');
         } catch (e) {
+            threw = true;
             console.log(`test expected to fail: ${e}`)
             assert.equal(e.message, "Error reading file /sys/fs/cgroup/cpuacct/cpuacct.stat, Message: Cannot read property 'split' of undefined")
         }
+        assert.ok(threw);
     });
 
 });
