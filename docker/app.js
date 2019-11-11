@@ -10,7 +10,7 @@ async function run() {
 	const metrics = await getAllMetrics();
 
 	if (previousMetrics) {
-		const cpuPercentage = cpu().calculateUsage(previousMetrics, metrics.cpuacct.usage);
+		const cpuPercentage = cpu.calculateUsage(previousMetrics, metrics.cpuacct.usage);
 		console.log(`CPU %             MEM %`);
 		console.log(`${cpuPercentage.toFixed(2)}             ${metrics.memory.containerUsagePercentage.toFixed(2)}`)
 	}
