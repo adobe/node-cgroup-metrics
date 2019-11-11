@@ -18,13 +18,23 @@ Calculated values:
 - `containerUsagePercentage()`:`stats.rss` + `kmem.usage_in_bytes` / `limit_in_bytes`
 
 ### CPU Metrics:
+
+Raw CPU values:
 [CPU](https://www.kernel.org/doc/Documentation/cgroup-v1/cpuacct.txt) reads from path `/sys/fs/cgroup/`:
 
-- `cpuacct.usage`: total CPU time (in nanoseconds) obtained by this cgroup (CPU time obtained by all the tasks)
-in the system
-- `cpuacct.stat`: reports the user and system CPU time consumed by all tasks in this cgroup (including tasks lower in the hierarchy):
+- `cpuacct.usage`: total CPU time (in nanoseconds) since the start of the container obtained by this cgroup (CPU time obtained by all the tasks) in the system
+- `cpuacct.stat`: reports the user and system CPU time consumed by all tasks in this cgroup (including tasks lower in the hierarchy)
     - `user`: CPU time (in nanoseconds) spent by tasks of the cgroup in user mode
     - `system`: CPU time (in nanoseconds) spent by tasks of the cgroup in kernel mode
+    - `timestamp`: timestamp of when the measurement was taken
+
+Both calls will return an object containing one or more `CpuMetric` objects for a specific cpu task: 
+- `cpuNanosSinceContainerStart`: total CPU time (in nanoseconds) since the start of the container obtained by this cgroup in the system
+- `timestamp`: timestamp of when the measurement was taken
+
+Calculated CPU values:
+- `calculateUsage`: takes two instances of calls to `cpuacct.usage` or `cpuacct.stat` and returns the calculated usage in percentage of CPU time:
+    ` second time since container start - first time since container start / total time`
 
 
 ### Installation
@@ -52,12 +62,35 @@ console.log(containerUsagePercentage);
 #### CPU Metrics
 ```javascript
 const cpu = cgroup.cpu();
-const cpuacct_usage = await cpu.usage();
-console.log(`Total CPU usage: ${cpuacct_usage}`);
 
+/* Returns an object like:
+* {
+*    cpuNanosSinceContainerStart: 120234,
+*    timestamp: 153686574
+* }
+* */
+const cpuacct_usage = await cpu.usage();
+console.log(`Total CPU time since start of container (ns): ${cpuacct_usage.cpuNanosSinceContainerStart}`);
+
+
+/* Returns an object like:
+* {
+*     user: {
+*               cpuNanosSinceContainerStart: 120234,
+*               timestamp: 153686574
+*          },
+*    system: {
+*               cpuNanosSinceContainerStart: 120234,
+*               timestamp: 153686574
+*           },
+* }
+* */
 const cpuacct_stats = await cpu.stat();
-console.log(`CPU user count: ${cpuacct_stat.user}`);
-console.log(`CPU system count: ${cpuacct_stat.system}`);
+console.log(`CPU user count object: ${cpuacct_stat.user}`);
+console.log(`CPU system count object: ${cpuacct_stat.system}`);
+
+const calculateUsage = await cpu.calculateUsage(cpuacct_usage1, cpuacct_usage2);
+
 ```
 #### All Metrics
 
@@ -69,7 +102,7 @@ const metrics = await cgroup.metrics();
 console.log(`Container usage: ${metrics.memory.containerUsage}`);
 console.log(`Container usage percentage: ${metrics.memory.containerUsagePercentage}`);
 
-console.log(`Total CPU usage: ${metrics.cpuacct.usage}`);
+console.log(`Total CPU time since start of container (ns): ${metrics.cpuacct.usagecpuNanosSinceContainerStart}`);
 console.log(`CPU user count: ${metrics.cpuacct.stat.user}`);
 console.log(`CPU system count: ${metrics.cpuacct.stat.system}`);
 ```

@@ -18,8 +18,7 @@
   ],
   "author": "Jamie Delbick",
   "dependencies": {
-    "assert": "^2.0.0",
-    "fs": "^0.0.1-security"
+    "flat": "^5.0.0"
   },
   "devDependencies": {
     "eslint": "^5.15.1",
