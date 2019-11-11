@@ -33,7 +33,7 @@ Both calls will return an object containing one or more `CpuMetric` objects for 
 - `timestamp`: timestamp of when the measurement was taken
 
 Calculated CPU values:
-- `calculateUsage`: takes two instances of calls to `cpuacct.usage` or `cpuacct.stat` and returns the calculated usage:
+- `calculateUsage`: takes two instances of calls to `cpuacct.usage` or `cpuacct.stat` and returns the calculated usage in percentage of CPU time:
     ` second time since container start - first time since container start / total time`
 
 
