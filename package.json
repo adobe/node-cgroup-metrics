@@ -27,7 +27,7 @@
     "eslint-config-problems": "^2.0.0",
     "eslint-plugin-mocha": "^6.1.1",
     "mocha": "^6.2.0",
-    "mockery": "^2.1.0",
+    "mock-fs": "^4.10.3",
     "nyc": "^14.1.1"
   }
 }
