@@ -10,6 +10,7 @@ jobs:
     docker:
       - image: circleci/node:12
     steps:
+      - checkout
       - run: npm install
       - run: npm test -- -v
       - run: npm run report-coverage
