@@ -15,88 +15,35 @@ written permission of Adobe.
 /* eslint mocha/no-mocha-arrows: "off" */
 
 const assert = require('assert');
-const mockery = require('mockery');
+// const mockery = require('mockery');
+const mockFs = require('mock-fs');
+const { metrics, memory, cpu } = require('../index');
 
-// mock the fs readFile function for testing
-const fsMock = {
-    readFileSync: function (path) {
-        if (path === '/sys/fs/cgroup/memory/memory.stat') {
-            return ('cache 2453\nrss 1234\n');
-        }
-        if (path === '/sys/fs/cgroup/memory/memory.kmem.usage_in_bytes') {
-            return ('5432');
-        }
-        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') {
-            return ('9999');
-        }
-        if (path === '/sys/fs/cgroup/cpuacct/cpuacct.usage') {
-            return ('1000');
-        }
-        if (path === '/sys/fs/cgroup/cpuacct/cpuacct.stat') {
-            return ('user 2000\nsystem 3000\n');
-        }
-        return('file path not found');
-     }
-};
-
-// mock empty file
-const fsMockEmptyFile = {
-    readFileSync: function (path) {
-        if (path === '/sys/fs/cgroup/memory/memory.stat') {
-            return ('');
-        }
-        return('file path not found');
-    }
-}
-
-// mock malformed file
-const fsMockMalformedFile = {
-    readFileSync: function (path) {
-        if (path === '/sys/fs/cgroup/memory/memory.stat') {
-            return ('cache 2453\nrss 1234\n');
-        }
-        if (path === '/sys/fs/cgroup/memory/memory.kmem.usage_in_bytes') {
-            return ('malformed data');
-        }
-        if (path === '/sys/fs/cgroup/memory/memory.limit_in_bytes') {
-            return ('malformed data');
-        }
-        return('file path not found');
-    }
-}
-
-// mock malformed file
-const fsMockMalformedStatFile = {
-    readFileSync: function (path) {
-        if (path === '/sys/fs/cgroup/memory/memory.stat') {
-            return ('malformed data');
-        }
-        if (path === '/sys/fs/cgroup/cpuacct/cpuacct.stat') {
-            return ('malformed data');
-        }
-        return('file path not found');
-    }
-}
-
+const UNLIMITED_MEMORY_AMOUNT = 9223372036854771712;
 
 describe('cgroup Metrics', function() {
-
-    afterEach(() => {
-        mockery.deregisterMock('fs');
-        mockery.disable();
+    beforeEach( () => {
+        mockFs();
     })
 
-    after( () => {
-        mockery.deregisterAll();
+    afterEach(() => {
+        mockFs.restore();
     })
 
     it('should return the same value as reading the mocked value in the file system', async () => {
-        mockery.enable({
-            warnOnUnregistered: false,
-            useCleanCache:true
-        });
-        mockery.registerMock('fs', fsMock);
-        const memory = require('../lib/memory');
+        mockFs({
+            '/sys/fs/cgroup': {
+                'memory': {
+                    'memory.stat':'cache 2453\nrss 1234\n',
+                    'memory.kmem.usage_in_bytes':'5432',
+                    'memory.limit_in_bytes': '9999'
+                },
+                'cpuacct': {
+                    'cpuacct.usage': '1000',
+                    'cpuacct.stat': 'user 2000\nsystem 3000\n'
+                }
+            }
+        })
 
         const containerUsage =  memory.containerUsage();
         assert.equal(containerUsage, 6666);
@@ -106,12 +53,19 @@ describe('cgroup Metrics', function() {
     });
 
     it('should return the same value as reading the mocked memory value in the file system with containerUsage', async () => {
-        mockery.enable({
-            warnOnUnregistered: false,
-            useCleanCache:true
-        });
-        mockery.registerMock('fs', fsMock);
-        const memory = require('../lib/memory');
+        mockFs({
+            '/sys/fs/cgroup': {
+                'memory': {
+                    'memory.stat':'cache 2453\nrss 1234\n',
+                    'memory.kmem.usage_in_bytes':'5432',
+                    'memory.limit_in_bytes': '9999'
+                },
+                'cpuacct': {
+                    'cpuacct.usage': '1000',
+                    'cpuacct.stat': 'user 2000\nsystem 3000\n'
+                }
+            }
+        })
 
         const containerUsage =  memory.containerUsage();
         assert.equal(containerUsage, 6666);
@@ -124,12 +78,19 @@ describe('cgroup Metrics', function() {
     });
 
     it('should return the same value as reading the mocked value in the file system for cpu', async () => {
-        mockery.enable({
-            warnOnUnregistered: false,
-            useCleanCache:true
-        });
-        mockery.registerMock('fs', fsMock);
-        const cpu = require('../lib/cpu');
+        mockFs({
+            '/sys/fs/cgroup': {
+                'memory': {
+                    'memory.stat':'cache 2453\nrss 1234\n',
+                    'memory.kmem.usage_in_bytes':'5432',
+                    'memory.limit_in_bytes': '9999'
+                },
+                'cpuacct': {
+                    'cpuacct.usage': '1000',
+                    'cpuacct.stat': 'user 2000\nsystem 3000\n'
+                }
+            }
+        })
 
 
         const usage = cpu.usage();
@@ -168,12 +129,19 @@ describe('cgroup Metrics', function() {
     });
 
     it('should get all metrics', async () => {
-        mockery.enable({
-            warnOnUnregistered: false,
-            useCleanCache:true
-        });
-        mockery.registerMock('fs', fsMock);
-        const { metrics } = require('../index');
+        mockFs({
+            '/sys/fs/cgroup': {
+                'memory': {
+                    'memory.stat':'cache 2453\nrss 1234\n',
+                    'memory.kmem.usage_in_bytes':'5432',
+                    'memory.limit_in_bytes': '9999'
+                },
+                'cpuacct': {
+                    'cpuacct.usage': '1000',
+                    'cpuacct.stat': 'user 2000\nsystem 3000\n'
+                }
+            }
+        })
 
 
         const metrics_object = metrics();
@@ -192,12 +160,19 @@ describe('cgroup Metrics', function() {
     });
 
     it('should get all metrics and return a 1D object', async () => {
-        mockery.enable({
-            warnOnUnregistered: false,
-            useCleanCache:true
-        });
-        mockery.registerMock('fs', fsMock);
-        const { metrics } = require('../index');
+        mockFs({
+            '/sys/fs/cgroup': {
+                'memory': {
+                    'memory.stat':'cache 2453\nrss 1234\n',
+                    'memory.kmem.usage_in_bytes':'5432',
+                    'memory.limit_in_bytes': '9999'
+                },
+                'cpuacct': {
+                    'cpuacct.usage': '1000',
+                    'cpuacct.stat': 'user 2000\nsystem 3000\n'
+                }
+            }
+        })
 
 
         const metrics_object1D = metrics(true);
@@ -238,13 +213,7 @@ describe('cgroup Metrics', function() {
     });
 
     it('should throw an error if the file is empty', async () => {
-        mockery.enable({
-            warnOnUnregistered: false,
-            useCleanCache:true
-        });
-        mockery.registerMock('fs', fsMockEmptyFile);
-
-        const memory = require('../lib/memory');
+        mockFs({ '/sys/fs/cgroup/memory/memory.stat':'' })
 
         try {
             memory.containerUsage();
@@ -255,14 +224,14 @@ describe('cgroup Metrics', function() {
         }
     });
 
-    it('should throw an error if the data is malformed', async () => {
-        mockery.enable({
-            warnOnUnregistered: false,
-            useCleanCache:true
-        });
-        mockery.registerMock('fs', fsMockMalformedFile);
-
-        const memory = require('../lib/memory');
+    it('should throw an error if any of memory data is malformed', async () => {
+        mockFs({
+            '/sys/fs/cgroup/memory': {
+                'memory.stat':'cache 2453\nrss 1234\n',
+                'memory.kmem.usage_in_bytes':'malformed data',
+                'memory.limit_in_bytes': 'malformed data'
+            }
+        })
 
         try {
             memory.containerUsage();
@@ -289,13 +258,12 @@ describe('cgroup Metrics', function() {
     });
 
     it('should throw an error if the stat data is malformed', async () => {
-        mockery.enable({
-            warnOnUnregistered: false,
-            useCleanCache:true
-        });
-        mockery.registerMock('fs', fsMockMalformedStatFile);
-
-        const {memory, cpu} = require('../index');
+        mockFs({
+            '/sys/fs/cgroup': {
+                'memory': { 'memory.stat':'malformed data'},
+                'cpuacct': { 'cpuacct.stat':'malformed data'}
+            }
+        })
 
         let threw = false;
 
@@ -320,6 +288,26 @@ describe('cgroup Metrics', function() {
             assert.equal(e.message, "Error reading file /sys/fs/cgroup/cpuacct/cpuacct.stat, Message: Cannot read property 'split' of undefined")
         }
         assert.ok(threw);
+    });
+
+    it('should use the total memory of the host if the memory limit is set to unlimited', async () => {
+        mockFs({
+            '/sys/fs/cgroup/memory': {
+                'memory.stat':'cache 2453\nrss 1234\n',
+                'memory.kmem.usage_in_bytes':'2000',
+                'memory.limit_in_bytes': `${UNLIMITED_MEMORY_AMOUNT}`
+            }
+        })
+        const osMock = require('os');
+        const originalOSTotalMem = osMock.totalmem;
+
+        osMock.totalmem = function() {
+            return 80000
+        }
+
+        const memUsagePerc = memory.containerUsagePercentage();
+        assert.equal(memUsagePerc, 4.0425)
+        osMock.totalmem = originalOSTotalMem;
     });
 
 });
