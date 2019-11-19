@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "pretest": "eslint index.js",
-    "test": "nyc mocha"
+    "test": "nyc mocha test/*.test.js",
+    "report-coverage": "nyc report --reporter=json && codecov -f coverage/coverage-final.json"
   },
   "repository": {
     "type": "git",
@@ -18,6 +19,7 @@
   ],
   "author": "Jamie Delbick",
   "dependencies": {
+    "codecov": "^3.6.1",
     "flat": "^5.0.0"
   },
   "devDependencies": {
