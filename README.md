@@ -1,4 +1,4 @@
-[![npm version](https://badge.fury.io/js/@adobe/cgroup-metrics.svg)](https://badge.fury.io/js/@adobe/cgroup-metrics)
+[![Version](https://img.shields.io/npm/v/@adobe/cgroup-metrics.svg)](https://npmjs.org/package/@adobe/cgroup-metrics)
 
 ### CGROUP-METRICS
 
