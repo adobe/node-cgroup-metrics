@@ -5,7 +5,6 @@
 Node Module for reading [cgroup](https://www.kernel.org/doc/Documentation/cgroup-v1/) metrics. Reads from `/sys/fs/cgroup/`. 
 
 ### Memory Metrics:
-
 [Memory](https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt) reads from path `/sys/fs/cgroup/memory/memory`:
 
 Raw values:
