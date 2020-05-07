@@ -31,7 +31,7 @@ jobs:
       script: skip
       before_deploy: "echo 'Releasing to npm'"
       deploy:
-        if: [ "$TRAVIS_OS_NAME" == "linux" ]
+        if:  "$TRAVIS_OS_NAME" == "linux" 
         # on:
         #   branch: master
         provider: script
