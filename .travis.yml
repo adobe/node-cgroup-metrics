@@ -23,6 +23,7 @@ node_js:
 install:
   - npm version
   - npm install
+
 jobs:
   include:
     - script: npm test
@@ -30,10 +31,10 @@ jobs:
       node_js: lts/*
       script: skip
       before_deploy: "echo 'Releasing to npm'"
-      deploy:
-        if:  "$TRAVIS_OS_NAME" == "linux" 
-        # on:
-        #   branch: master
+      deploy: 
+        on:
+          branch: master
+          condition:  $TRAVIS_OS_NAME == linux
         provider: script
         skip_cleanup: true
         script:
