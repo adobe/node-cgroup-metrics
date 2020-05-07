@@ -1,7 +1,7 @@
 [![Version](https://img.shields.io/npm/v/@adobe/cgroup-metrics.svg)](https://npmjs.org/package/@adobe/cgroup-metrics)
 
 ### CGROUP-METRICS
-Node Module for reading [cgroup](https://www.kernel.org/doc/Documentation/cgroup-v1/) metrics. Reads from `/sys/fs/cgroup/`. 
+Node Module for reading [cgroup](https://www.kernel.org/doc/Documentation/cgroup-v1/) metrics. Reads from `/sys/fs/cgroup/`.
 
 ### Memory Metrics:
 [Memory](https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt) reads from path `/sys/fs/cgroup/memory/memory`:
