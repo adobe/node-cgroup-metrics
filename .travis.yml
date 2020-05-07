@@ -38,3 +38,4 @@ jobs:
         skip_cleanup: true
         script:
           - echo "Released!"
+          # - npm run semantic-release
