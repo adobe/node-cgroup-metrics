@@ -34,7 +34,7 @@ jobs:
       deploy: 
         on:
           # branch: master
-          condition:  "$TRAVIS_OS_NAME" == "linux"
+          condition:  $TRAVIS_OS_NAME == linux
         provider: script
         skip_cleanup: true
         script:
