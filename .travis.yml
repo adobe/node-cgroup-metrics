@@ -27,13 +27,13 @@ jobs:
   include:
     - script: npm test
     - stage: release
-      if: [ "$TRAVIS_OS_NAME" == "linux" ]
       node_js: lts/*
-#       script: skip
+      script: skip
       before_deploy: "echo 'Releasing to npm'"
       deploy:
-#         on:
-#           branch: master
+        if: [ "$TRAVIS_OS_NAME" == "linux" ]
+        # on:
+        #   branch: master
         provider: script
         skip_cleanup: true
         script:
