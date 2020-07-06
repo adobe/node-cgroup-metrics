@@ -1,7 +1,7 @@
 {
   "name": "@adobe/cgroup-metrics",
   "version": "3.0.0",
-  "description": "Node Module to read cgroup memory data",
+  "description": "Node Module to read cgroup memory data_cicd",
   "main": "index.js",
   "scripts": {
     "pretest": "eslint index.js",
