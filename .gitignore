@@ -6,4 +6,5 @@ thumbs.db
 node_modules
 .nyc_output
 coverage
+coverage.lcov
 cgroup-metrics-1.1.2.tgz
