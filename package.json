@@ -14,7 +14,7 @@
     "url": "https://github.com/adobe/node-cgroup-metrics"
   },
   "publishConfig": {
-        "access": "public"
+    "access": "public"
   },
   "keywords": [
     "node",
@@ -25,10 +25,10 @@
   "author": "Adobe Inc.",
   "license": "MIT",
   "dependencies": {
-    "codecov": "^3.6.5",
     "flat": "^5.0.0"
   },
   "devDependencies": {
+    "codecov": "^3.7.1",
     "eslint": "^6.8.0",
     "eslint-config-problems": "^4.0.0",
     "eslint-plugin-mocha": "^6.3.0",
