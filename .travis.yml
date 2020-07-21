@@ -9,8 +9,8 @@
 
 language: node_js
 os:
-  - windows
   - linux
+  - windows
   - osx
 
 node_js:
@@ -27,7 +27,7 @@ jobs:
   include:
     - stage: Test
       script: npm test
-    - stage: release
+    - stage: Release
       if: branch = master
       node_js: "12"
       script: skip
@@ -39,7 +39,7 @@ jobs:
           condition:  $TRAVIS_OS_NAME == linux
         provider: script
         skip_cleanup: true
-        script: npx semantic-release --debug
+        script: npm run semantic-release
 
 after_success:
   - npm run report-coverage
