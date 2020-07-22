@@ -1,4 +1,5 @@
-[![Version](https://img.shields.io/npm/v/@adobe/cgroup-metrics.svg)](https://npmjs.org/package/@adobe/cgroup-metrics)
+[![Version](https://img.shields.io/npm/v/@adobe/cgroup-metrics.svg)](https://npmjs.org/package/@adobe/cgroup-metrics) [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0) [![codecov](https://codecov.io/gh/adobe/node-cgroup-metrics/branch/master/graph/badge.svg)](https://codecov.io/gh/adobe/node-cgroup-metrics) [![Travis](https://travis-ci.com/adobe/node-cgroup-metrics.svg?branch=master)](https://travis-ci.com/adobe/node-cgroup-metrics)
+
 
 ### CGROUP-METRICS
 Node Module for reading [cgroup](https://www.kernel.org/doc/Documentation/cgroup-v1/) metrics. Reads from `/sys/fs/cgroup/`. 
