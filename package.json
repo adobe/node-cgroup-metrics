@@ -4,17 +4,14 @@
   "description": "Node Module to read cgroup memory data",
   "main": "index.js",
   "scripts": {
-    "pretest": "eslint index.js",
-    "test": "nyc mocha test/*.test.js",
+    "test": "nyc -r=text -r=lcov mocha --recursive",
+    "posttest": "eslint .",
     "semantic-release": "semantic-release",
     "report-coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/adobe/node-cgroup-metrics"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "keywords": [
     "node",
