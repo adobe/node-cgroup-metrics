@@ -9,6 +9,8 @@ then your use, modification, or distribution of it requires the prior
 written permission of Adobe.
 */
 
+'use strict';
+
 module.exports = {
     "extends": [
         "problems"

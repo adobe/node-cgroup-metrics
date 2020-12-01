@@ -1,0 +1,16 @@
+.vscode
+.serverless
+coverage
+.nyc_output
+test/
+.circleci
+.eslintrc.js
+.eslintignore
+.releaserc
+stryker.conf.js
+build/
+.travis.yml
+.github/
+
+# npm pack leftovers
+*.tgz
