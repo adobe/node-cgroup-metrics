@@ -21,8 +21,8 @@ const { memory } = require('../index');
 
 const UNLIMITED_MEMORY_AMOUNT = 9223372036854771712;
 
-describe('cgroup memory: container memory limits', function() {
-    beforeEach( () => {
+describe('cgroup memory: container memory limits', function () {
+    beforeEach(() => {
         mockFs();
     });
 
@@ -34,8 +34,8 @@ describe('cgroup memory: container memory limits', function() {
         mockFs({
             '/sys/fs/cgroup': {
                 'memory': {
-                    'memory.stat':'cache 2453\nrss 1234\n',
-                    'memory.kmem.usage_in_bytes':'5432',
+                    'memory.stat': 'cache 2453\nrss 1234\n',
+                    'memory.kmem.usage_in_bytes': '5432',
                     'memory.limit_in_bytes': '9999'
                 },
                 'cpuacct': {
@@ -45,7 +45,7 @@ describe('cgroup memory: container memory limits', function() {
             }
         });
 
-        const containerUsage =  memory.containerMemoryLimit();
+        const containerUsage = memory.containerMemoryLimit();
         assert.equal(containerUsage, 9999);
         assert.equal(typeof containerUsage, "number");
     });
@@ -54,14 +54,14 @@ describe('cgroup memory: container memory limits', function() {
     it('should return the total memory of the host if the memory limit is set to unlimited', async () => {
         mockFs({
             '/sys/fs/cgroup/memory': {
-                'memory.stat':'cache 2453\nrss 1234\n',
-                'memory.kmem.usage_in_bytes':'2000',
+                'memory.stat': 'cache 2453\nrss 1234\n',
+                'memory.kmem.usage_in_bytes': '2000',
                 'memory.limit_in_bytes': `${UNLIMITED_MEMORY_AMOUNT}`
             }
         });
         const osMock = require('os');
         const originalOSTotalMem = osMock.totalmem;
-        osMock.totalmem = function() {
+        osMock.totalmem = function () {
             return 80000;
         };
 

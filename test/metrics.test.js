@@ -21,8 +21,8 @@ const { metrics, memory, cpu } = require('../index');
 
 const UNLIMITED_MEMORY_AMOUNT = 9223372036854771712;
 
-describe('cgroup Metrics', function() {
-    beforeEach( () => {
+describe('cgroup Metrics', function () {
+    beforeEach(() => {
         mockFs();
     })
 
@@ -34,8 +34,8 @@ describe('cgroup Metrics', function() {
         mockFs({
             '/sys/fs/cgroup': {
                 'memory': {
-                    'memory.stat':'cache 2453\nrss 1234\n',
-                    'memory.kmem.usage_in_bytes':'5432',
+                    'memory.stat': 'cache 2453\nrss 1234\n',
+                    'memory.kmem.usage_in_bytes': '5432',
                     'memory.limit_in_bytes': '9999'
                 },
                 'cpuacct': {
@@ -45,19 +45,19 @@ describe('cgroup Metrics', function() {
             }
         })
 
-        const containerUsage =  memory.containerUsage();
+        const containerUsage = memory.containerUsage();
         assert.equal(containerUsage, 6666);
 
-        const containerUsagePercentage =  memory.containerUsagePercentage();
-        assert.equal(containerUsagePercentage, 6666/9999 * 100);
+        const containerUsagePercentage = memory.containerUsagePercentage();
+        assert.equal(containerUsagePercentage, 6666 / 9999 * 100);
     });
 
     it('should return the same value as reading the mocked memory value in the file system with containerUsage', async () => {
         mockFs({
             '/sys/fs/cgroup': {
                 'memory': {
-                    'memory.stat':'cache 2453\nrss 1234\n',
-                    'memory.kmem.usage_in_bytes':'5432',
+                    'memory.stat': 'cache 2453\nrss 1234\n',
+                    'memory.kmem.usage_in_bytes': '5432',
                     'memory.limit_in_bytes': '9999'
                 },
                 'cpuacct': {
@@ -67,12 +67,12 @@ describe('cgroup Metrics', function() {
             }
         })
 
-        const containerUsage =  memory.containerUsage();
+        const containerUsage = memory.containerUsage();
         assert.equal(containerUsage, 6666);
         assert.equal(typeof containerUsage, "number");
 
-        const containerUsagePercentage =  memory.containerUsagePercentage(containerUsage);
-        assert.equal(containerUsagePercentage, 6666/9999 * 100);
+        const containerUsagePercentage = memory.containerUsagePercentage(containerUsage);
+        assert.equal(containerUsagePercentage, 6666 / 9999 * 100);
         assert.equal(typeof containerUsagePercentage, "number");
 
     });
@@ -81,8 +81,8 @@ describe('cgroup Metrics', function() {
         mockFs({
             '/sys/fs/cgroup': {
                 'memory': {
-                    'memory.stat':'cache 2453\nrss 1234\n',
-                    'memory.kmem.usage_in_bytes':'5432',
+                    'memory.stat': 'cache 2453\nrss 1234\n',
+                    'memory.kmem.usage_in_bytes': '5432',
                     'memory.limit_in_bytes': '9999'
                 },
                 'cpuacct': {
@@ -132,8 +132,8 @@ describe('cgroup Metrics', function() {
         mockFs({
             '/sys/fs/cgroup': {
                 'memory': {
-                    'memory.stat':'cache 2453\nrss 1234\n',
-                    'memory.kmem.usage_in_bytes':'5432',
+                    'memory.stat': 'cache 2453\nrss 1234\n',
+                    'memory.kmem.usage_in_bytes': '5432',
                     'memory.limit_in_bytes': '9999'
                 },
                 'cpuacct': {
@@ -153,7 +153,7 @@ describe('cgroup Metrics', function() {
         console.log(`CPU user count: ${metrics_object.cpuacct.stat.user}`);
         console.log(`CPU system count: ${metrics_object.cpuacct.stat.system}`);
         assert.equal(metrics_object.memory.containerUsage, 6666);
-        assert.equal(metrics_object.memory.containerUsagePercentage, 6666/9999 * 100);
+        assert.equal(metrics_object.memory.containerUsagePercentage, 6666 / 9999 * 100);
         assert.equal(metrics_object.cpuacct.stat.user.cpuNanosSinceContainerStart, 2000);
         assert.equal(metrics_object.cpuacct.stat.system.cpuNanosSinceContainerStart, 3000);
         assert.equal(metrics_object.cpuacct.usage.cpuNanosSinceContainerStart, 1000);
@@ -163,8 +163,8 @@ describe('cgroup Metrics', function() {
         mockFs({
             '/sys/fs/cgroup': {
                 'memory': {
-                    'memory.stat':'cache 2453\nrss 1234\n',
-                    'memory.kmem.usage_in_bytes':'5432',
+                    'memory.stat': 'cache 2453\nrss 1234\n',
+                    'memory.kmem.usage_in_bytes': '5432',
                     'memory.limit_in_bytes': '9999'
                 },
                 'cpuacct': {
@@ -178,7 +178,7 @@ describe('cgroup Metrics', function() {
         const metrics_object1D = metrics(true);
 
         assert.equal(metrics_object1D['memory.containerUsage'], 6666);
-        assert.equal(metrics_object1D['memory.containerUsagePercentage'], 6666/9999 * 100);
+        assert.equal(metrics_object1D['memory.containerUsagePercentage'], 6666 / 9999 * 100);
         assert.equal(metrics_object1D['cpuacct.stat.user.cpuNanosSinceContainerStart'], 2000);
         assert.equal(metrics_object1D['cpuacct.stat.system.cpuNanosSinceContainerStart'], 3000);
         assert.equal(metrics_object1D['cpuacct.usage.cpuNanosSinceContainerStart'], 1000);
@@ -213,7 +213,7 @@ describe('cgroup Metrics', function() {
     });
 
     it('should throw an error if the file is empty', async () => {
-        mockFs({ '/sys/fs/cgroup/memory/memory.stat':'' })
+        mockFs({ '/sys/fs/cgroup/memory/memory.stat': '' })
 
         try {
             memory.containerUsage();
@@ -227,8 +227,8 @@ describe('cgroup Metrics', function() {
     it('should throw an error if any of memory data is malformed', async () => {
         mockFs({
             '/sys/fs/cgroup/memory': {
-                'memory.stat':'cache 2453\nrss 1234\n',
-                'memory.kmem.usage_in_bytes':'malformed data',
+                'memory.stat': 'cache 2453\nrss 1234\n',
+                'memory.kmem.usage_in_bytes': 'malformed data',
                 'memory.limit_in_bytes': 'malformed data'
             }
         })
@@ -260,8 +260,8 @@ describe('cgroup Metrics', function() {
     it('should throw an error if the stat data is malformed', async () => {
         mockFs({
             '/sys/fs/cgroup': {
-                'memory': { 'memory.stat':'malformed data'},
-                'cpuacct': { 'cpuacct.stat':'malformed data'}
+                'memory': { 'memory.stat': 'malformed data' },
+                'cpuacct': { 'cpuacct.stat': 'malformed data' }
             }
         })
 
@@ -280,7 +280,7 @@ describe('cgroup Metrics', function() {
         threw = false;
 
         try {
-             cpu.stat();
+            cpu.stat();
             assert.fail('failure expected');
         } catch (e) {
             threw = true;
@@ -293,15 +293,15 @@ describe('cgroup Metrics', function() {
     it('should use the total memory of the host if the memory limit is set to unlimited', async () => {
         mockFs({
             '/sys/fs/cgroup/memory': {
-                'memory.stat':'cache 2453\nrss 1234\n',
-                'memory.kmem.usage_in_bytes':'2000',
+                'memory.stat': 'cache 2453\nrss 1234\n',
+                'memory.kmem.usage_in_bytes': '2000',
                 'memory.limit_in_bytes': `${UNLIMITED_MEMORY_AMOUNT}`
             }
         })
         const osMock = require('os');
         const originalOSTotalMem = osMock.totalmem;
 
-        osMock.totalmem = function() {
+        osMock.totalmem = function () {
             return 80000
         }
 
