@@ -9,8 +9,8 @@ Node Module for reading [cgroup](https://www.kernel.org/doc/Documentation/cgroup
 
 Raw values:
 - `stat.rss`: # of bytes of anonymous and swap cache memory
-- `kmem.usage_in_bytes`: current kernel memory allocation
-- `limit_in_bytes`: limit of memory usage
+- `kmem.usage_in_bytes`: current kernel memory allocation in bytes
+- `limit_in_bytes`: limit of memory usage in bytes
 
 Calculated values:
 - `containerUsage()`: `stats.rss` + `kmem.usage_in_bytes`
