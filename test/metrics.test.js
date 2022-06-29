@@ -253,7 +253,7 @@ describe('cgroup Metrics', function() {
             assert.fail('failure expected');
         } catch (e) {
             console.log(`test expected to fail: ${e}`)
-            assert.equal(e.message, "One or more metrics are malformed. containerUsage: 1234, limit: NaN")
+            assert.equal(e.message, "Memory limit metric is malformed: limit: NaN")
         }
     });
 
