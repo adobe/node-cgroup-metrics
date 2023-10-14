@@ -39,7 +39,7 @@ Calculated CPU values:
 ### Installation
 
 ```
-npm install cgroup-metrics
+npm install @adobe/cgroup-metrics
 ```
 
 ### Usage
@@ -50,7 +50,7 @@ You can access each metric separately using the async functions for each metric
 ```javascript
 const cgroup = require('cgroup-metrics');
 
-const memory = cgroup.memory();
+const memory = cgroup.memory;
 const containerUsage = await memory.containerUsage();
 console.log(containerUsage);
 
@@ -60,7 +60,7 @@ console.log(containerUsagePercentage);
 
 #### CPU Metrics
 ```javascript
-const cpu = cgroup.cpu();
+const cpu = cgroup.cpu;
 
 /* Returns an object like:
 * {
