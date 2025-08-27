@@ -2,36 +2,43 @@
 
 
 ### CGROUP-METRICS
-Node Module for reading [cgroup](https://www.kernel.org/doc/Documentation/cgroup-v1/) metrics. Reads from `/sys/fs/cgroup/`. 
+Node Module for reading [cgroup v1](https://www.kernel.org/doc/Documentation/cgroup-v1/) and [cgroup v2](https://docs.kernel.org/admin-guide/cgroup-v2.html) metrics. Reads from `/sys/fs/cgroup/`. 
 
 ### Memory Metrics:
-[Memory](https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt) reads from path `/sys/fs/cgroup/memory/memory`:
 
-Raw values:
-- `stat.rss`: # of bytes of anonymous and swap cache memory
-- `kmem.usage_in_bytes`: current kernel memory allocation
-- `limit_in_bytes`: limit of memory usage
+#### Raw values ([cgroup v1](https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt)):
+- `memory.stat.rss`: Resident Set Size - anonymous and swap cache memory (bytes)
+- `memory.kmem.usage_in_bytes`: Kernel memory usage (bytes)
+- `memory.limit_in_bytes`: Memory limit for the cgroup (bytes)
 
-Calculated values:
-- `containerUsage()`: `stats.rss` + `kmem.usage_in_bytes`
-- `containerUsagePercentage()`:`stats.rss` + `kmem.usage_in_bytes` / `limit_in_bytes`
+#### Raw values ([cgroup v2](https://docs.kernel.org/admin-guide/cgroup-v2.html#memory)):
+- `memory.stat.anon`: Anonymous memory usage (bytes)
+- `memory.stat`: Sum of `kernel_stack + slab + percpu + sock + vmalloc` (bytes)
+- `memory.max`: Memory limit for the cgroup (bytes, or "max" for unlimited)
+
+#### Calculated values:
+- `containerUsage()`: Total memory usage (combines anonymous memory + kernel memory)
+- `containerUsagePercentage()`: Memory usage as percentage of limit
+
 
 ### CPU Metrics:
 
-Raw CPU values:
-[CPU](https://www.kernel.org/doc/Documentation/cgroup-v1/cpuacct.txt) reads from path `/sys/fs/cgroup/`:
+#### Raw values ([cgroup v1](https://www.kernel.org/doc/Documentation/cgroup-v1/cpuacct.txt)):
+- `cpuacct.usage`: Total CPU time consumed by all tasks (nanoseconds)
+- `cpuacct.stat.user`: CPU time spent in user mode
+- `cpuacct.stat.system`: CPU time spent in kernel mode
 
-- `cpuacct.usage`: total CPU time (in nanoseconds) since the start of the container obtained by this cgroup (CPU time obtained by all the tasks) in the system
-- `cpuacct.stat`: reports the user and system CPU time consumed by all tasks in this cgroup (including tasks lower in the hierarchy)
-    - `user`: CPU time (in nanoseconds) spent by tasks of the cgroup in user mode
-    - `system`: CPU time (in nanoseconds) spent by tasks of the cgroup in kernel mode
-    - `timestamp`: timestamp of when the measurement was taken
+#### Raw values ([cgroup v2](https://docs.kernel.org/admin-guide/cgroup-v2.html#cpu)):
+- `cpu.stat.usage_usec`: Total CPU time consumed by all tasks (microseconds)
+- `cpu.stat.user_usec`: CPU time spent in user mode (microseconds) 
+- `cpu.stat.system_usec`: CPU time spent in kernel mode (microseconds)
 
-Both calls will return an object containing one or more `CpuMetric` objects for a specific cpu task: 
-- `cpuNanosSinceContainerStart`: total CPU time (in nanoseconds) since the start of the container obtained by this cgroup in the system
+#### Returned CPU metrics format:
+All CPU metrics include:
+- `cpuNanosSinceContainerStart`: total CPU time since container start
 - `timestamp`: timestamp of when the measurement was taken
 
-Calculated CPU values:
+#### Calculated CPU values:
 - `calculateUsage`: takes two instances of calls to `cpuacct.usage` or `cpuacct.stat` and returns the calculated usage in percentage of CPU time:
     ` second time since container start - first time since container start / total time`
 
@@ -113,23 +120,40 @@ console.log(`Memory usage in the container: ${metrics["memory.containerUsage"]}`
 
 ### Error Handling
 
-If there is no container running or there is an issue reading the file path, the function call will error something like this:
+#### File System Errors
+
+If there is no container running or cgroup files are missing:
 ```
-Error: Error reading file /sys/fs/cgroup/memory/memory.stat, Message: ENOENT: no such file or directory, open '/sys/fs/cgroup/memory/memory.stat'
+Error: Error reading file /sys/fs/cgroup/memory/memory.stat. ENOENT: no such file or directory, open '/sys/fs/cgroup/memory/memory.stat'
 ```
 
-If one of the files is empty, it will return an error like this:
+If cgroup files are empty:
 ```
-Error: Error reading file /sys/fs/cgroup/memory/memory.stat, Message: File is empty
+Error: Error reading file /sys/fs/cgroup/memory/memory.stat. File is empty: /sys/fs/cgroup/memory/memory.stat.
 ```
 
-If a file is malformed, it will return an error like this:
+#### Data Validation Errors
+
+For malformed memory metrics:
 ```
-Error: One or more metrics are malformed. containerUsage: 1234, limit: NaN
+Error: One or more metrics are malformed. rss: 1234, kmemUsage: NaN
 ```
-Or:
+
+For malformed CPU metrics:
 ```
-Error reading file /sys/fs/cgroup/cpuacct/cpuacct.stat, Message: Cannot read property 'split' of undefined
+Error: Error reading file /sys/fs/cgroup/cpuacct/cpuacct.stat. Malformed cpuacct.stat file: invalid CPU fields
+```
+
+#### cgroup v2 Specific Errors
+
+For malformed cgroup v2 memory data:
+```
+Error: Malformed memory.stat file: invalid anon field
+```
+
+For malformed cgroup v2 CPU data:
+```
+Error: Malformed cpu.stat file: invalid usage_usec field
 ```
 
 ### Contributing

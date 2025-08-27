@@ -196,7 +196,7 @@ describe('cgroup Metrics', function() {
             assert.fail('failure expected');
         } catch (e) {
             console.log(`test expected to fail: ${e}`)
-            assert.equal(e.message, "Error reading file /sys/fs/cgroup/memory/memory.stat, Message: ENOENT: no such file or directory, open '/sys/fs/cgroup/memory/memory.stat'")
+            assert.equal(e.message, "Error reading file /sys/fs/cgroup/memory/memory.stat. ENOENT: no such file or directory, open '/sys/fs/cgroup/memory/memory.stat'")
         }
     });
 
@@ -208,7 +208,7 @@ describe('cgroup Metrics', function() {
             assert.fail('failure expected');
         } catch (e) {
             console.log(`test expected to fail: ${e}`)
-            assert.equal(e.message, "Error reading file /sys/fs/cgroup/cpuacct/cpuacct.usage, Message: ENOENT: no such file or directory, open '/sys/fs/cgroup/cpuacct/cpuacct.usage'")
+            assert.equal(e.message, "Error reading file /sys/fs/cgroup/cpuacct/cpuacct.usage. ENOENT: no such file or directory, open '/sys/fs/cgroup/cpuacct/cpuacct.usage'")
         }
     });
 
@@ -220,7 +220,7 @@ describe('cgroup Metrics', function() {
             assert.fail('failure expected');
         } catch (e) {
             console.log(`test expected to fail: ${e}`)
-            assert.equal(e.message, "Error reading file /sys/fs/cgroup/memory/memory.stat, Message: File is empty")
+            assert.equal(e.message, "Error reading file /sys/fs/cgroup/memory/memory.stat. File is empty: /sys/fs/cgroup/memory/memory.stat.")
         }
     });
 
@@ -273,7 +273,7 @@ describe('cgroup Metrics', function() {
         } catch (e) {
             threw = true;
             console.log(`test expected to fail: ${e}`)
-            assert.equal(e.message, "Error reading file /sys/fs/cgroup/memory/memory.stat, Message: Cannot read property 'split' of undefined")
+            assert.equal(e.message, "Error reading file /sys/fs/cgroup/memory/memory.stat. Malformed memory.stat file: invalid rss field")
         }
 
         assert.ok(threw);
@@ -285,9 +285,32 @@ describe('cgroup Metrics', function() {
         } catch (e) {
             threw = true;
             console.log(`test expected to fail: ${e}`)
-            assert.equal(e.message, "Error reading file /sys/fs/cgroup/cpuacct/cpuacct.stat, Message: Cannot read property 'split' of undefined")
+            assert.equal(e.message, "Error reading file /sys/fs/cgroup/cpuacct/cpuacct.stat. Malformed cpuacct.stat file: invalid CPU fields")
         }
         assert.ok(threw);
+    });
+
+    it('should handle cgroup v1 parsing with extra whitespace and formatting variations', async () => {
+        mockFs({
+            '/sys/fs/cgroup': {
+                'memory': {
+                    'memory.stat':'  cache   2453  \nrss    1234\n\n',  // extra whitespace
+                    'memory.kmem.usage_in_bytes':'5432',
+                    'memory.limit_in_bytes': '9999'
+                },
+                'cpuacct': {
+                    'cpuacct.usage': '1000',
+                    'cpuacct.stat': '  user    2000  \n  system   3000\n'  // extra whitespace
+                }
+            }
+        })
+
+        const containerUsage = memory.containerUsage();
+        assert.equal(containerUsage, 6666);
+
+        const stat = cpu.stat();
+        assert.equal(stat.user.cpuNanosSinceContainerStart, 2000);
+        assert.equal(stat.system.cpuNanosSinceContainerStart, 3000);
     });
 
     it('should use the total memory of the host if the memory limit is set to unlimited', async () => {
@@ -308,6 +331,131 @@ describe('cgroup Metrics', function() {
         const memUsagePerc = memory.containerUsagePercentage();
         assert.equal(memUsagePerc, 4.0425)
         osMock.totalmem = originalOSTotalMem;
+    });
+
+    // Test cgroup v2 support
+    describe('cgroup v2 support', function() {
+        it('should work with cgroup v2 memory metrics', async () => {
+            mockFs({
+                '/sys/fs/cgroup': {
+                    'cgroup.controllers': 'memory cpu',
+                    'memory.stat': 'anon 1234\nfile 2000\nkernel_stack 500\nslab 1000\npercpu 200\nsock 100\nvmalloc 50\n',
+                    'memory.max': '9999'
+                }
+            });
+
+            const containerUsage = memory.containerUsage();
+            // 1234+500+1000+200+100+50 = 3084
+            assert.equal(containerUsage, 3084);
+
+            const containerUsagePercentage = memory.containerUsagePercentage();
+            assert.equal(containerUsagePercentage, 3084/9999 * 100);
+        });
+
+        it('should work with cgroup v2 CPU metrics', async () => {
+            mockFs({
+                '/sys/fs/cgroup': {
+                    'cgroup.controllers': 'memory cpu',
+                    'cpu.stat': 'usage_usec 1000000\nuser_usec 20000000\nsystem_usec 30000000\n'
+                }
+            });
+
+            const usage = cpu.usage();
+            assert.equal(usage.cpuNanosSinceContainerStart, 1000000000);
+            assert.equal(typeof usage.timestamp, "number");
+
+            const stat = cpu.stat();
+            assert.equal(stat.user.cpuNanosSinceContainerStart, 2000); // 20,000,000 usec converted to USER_HZ ticks
+            assert.equal(stat.system.cpuNanosSinceContainerStart, 3000); // 30,000,000 usec converted to USER_HZ ticks
+            assert.equal(typeof stat.user.timestamp, "number");
+            assert.equal(typeof stat.system.timestamp, "number");
+        });
+
+        it('should throw error for cgroup v2 malformed memory limit (memory.max = "max")', async () => {
+            mockFs({
+                '/sys/fs/cgroup': {
+                    'cgroup.controllers': 'memory cpu',
+                    'memory.stat': 'anon 1234\nfile 2000\nkernel_stack 500\nslab 1000\npercpu 200\nsock 100\nvmalloc 50\n',
+                    'memory.max': 'max'
+                }
+            });
+
+            try {
+                memory.containerUsagePercentage();
+                assert.fail('Expected error was not thrown');
+            } catch (e) {
+                console.log(`test expected to fail: ${e}`)
+                assert.equal(e.message, 'One or more metrics are malformed. containerUsage: 3084, limit: NaN');
+            }
+        });
+
+        it('should handle cgroup v2 error cases', async () => {
+            // Missing files
+            mockFs({
+                '/sys/fs/cgroup': {
+                    'cgroup.controllers': 'memory cpu'
+                }
+            });
+
+            try {
+                memory.containerUsage();
+                assert.fail('failure expected');
+            } catch (e) {
+    
+                assert.equal(e.message, "Error reading file /sys/fs/cgroup/memory.stat. ENOENT: no such file or directory, open '/sys/fs/cgroup/memory.stat'");
+            }
+
+            try {
+                cpu.usage();
+                assert.fail('failure expected');
+            } catch (e) {
+    
+                assert.equal(e.message, "Error reading file /sys/fs/cgroup/cpu.stat. ENOENT: no such file or directory, open '/sys/fs/cgroup/cpu.stat'");
+            }
+
+            // Missing required fields
+            mockFs({
+                '/sys/fs/cgroup': {
+                    'cgroup.controllers': 'memory cpu',
+                    'memory.stat': 'file 2000\n', // Missing anon
+                    'cpu.stat': 'some_field 1000\n' // Missing usage_usec
+                }
+            });
+
+            try {
+                memory.containerUsage();
+                assert.fail('failure expected');
+            } catch (e) {
+    
+                assert.equal(e.message, "Error reading file /sys/fs/cgroup/memory.stat. Malformed memory.stat file: invalid anon field");
+            }
+
+            try {
+                cpu.usage();
+                assert.fail('failure expected');
+            } catch (e) {
+    
+                assert.equal(e.message, "Error reading file /sys/fs/cgroup/cpu.stat. Malformed cpu.stat file: invalid usage_usec field");
+            }
+        });
+
+        it('should get all metrics with cgroup v2', async () => {
+            mockFs({
+                '/sys/fs/cgroup': {
+                    'cgroup.controllers': 'memory cpu',
+                    'memory.stat': 'anon 1234\nfile 2000\nkernel_stack 500\nslab 1000\npercpu 200\nsock 100\nvmalloc 50\n',
+                    'memory.max': '9999',
+                    'cpu.stat': 'usage_usec 1000000\nuser_usec 20000000\nsystem_usec 30000000\n'
+                }
+            });
+
+            const metrics_object = metrics();
+            assert.equal(metrics_object.memory.containerUsage, 3084);
+            assert.equal(metrics_object.memory.containerUsagePercentage, 3084/9999 * 100);
+            assert.equal(metrics_object.cpuacct.stat.user.cpuNanosSinceContainerStart, 2000);
+            assert.equal(metrics_object.cpuacct.stat.system.cpuNanosSinceContainerStart, 3000);
+            assert.equal(metrics_object.cpuacct.usage.cpuNanosSinceContainerStart, 1000000000);
+        });
     });
 
 });
